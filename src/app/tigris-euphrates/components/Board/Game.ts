@@ -1,8 +1,12 @@
 import type { Game } from "boardgame.io";
 import { TurnOrder } from "boardgame.io/core";
 import { giveTileToPlayer, initialGameState } from "./helpers";
-import { TigrisEuphratesState } from "./types";
-import { PLAYER_TILE_CAPACITY } from "./constants";
+import { TigrisEuphratesState, Tile } from "./types";
+import {
+  COLUMN_SPACE_COUNT,
+  PLAYER_TILE_CAPACITY,
+  ROW_SPACE_COUNT,
+} from "./constants";
 
 // Player Victory points:
 //  - Red, Blue, Green, Black, Treasure (wild)
@@ -53,8 +57,25 @@ export const TigrisEuphrates: Game<TigrisEuphratesState> = {
       // place catastrophe tile on any empty space that does not have treasure or a monument
       // If this leaves a leader no longer next to a red temple, move the leader off the board.
     },
-    SwapTiles: () => {
-      // discard up to six tiles from player's supply and give player that many new tiles
+
+    // discard up to six tiles from player's supply and give player that many new tiles
+    SwapTiles: ({ G, ctx, events, random }, tileIndices: number[]) => {
+      if (G.tileBag.length < tileIndices.length) events.endGame();
+
+      let playerTiles: Tile[] = [];
+
+      // discard
+      for (let i = 0; i < G.players[ctx.currentPlayer].tiles.length; i++) {
+        if (!tileIndices.includes(i))
+          playerTiles.push(G.players[ctx.currentPlayer].tiles[i]);
+      }
+      G.players[ctx.currentPlayer].tiles = playerTiles;
+
+      // draw
+      random.Shuffle(G.tileBag);
+      for (let i = 0; i < G.players[ctx.currentPlayer].tiles.length; i++) {
+        giveTileToPlayer(G, ctx.currentPlayer);
+      }
     },
 
     // short-form move.
@@ -132,9 +153,17 @@ export const TigrisEuphrates: Game<TigrisEuphratesState> = {
   // Ends the game if this returns anything.
   // The return value is available in `ctx.gameover`.
   endIf: ({ G, ctx }) => {
-    // if there are less than three treasures on the board, then the game ends
-    //
     // if a player tries to draw a tile, and the tile bag is empty, then the game ends
+    let treasureCount = 0;
+    for (let i = 0; i < COLUMN_SPACE_COUNT; i++) {
+      for (let j = 0; j < ROW_SPACE_COUNT; j++) {
+        if (G.spaces[i][j].treasure) treasureCount++;
+        if (treasureCount === 3) return;
+      }
+    }
+
+    if (treasureCount < 3) return true;
+    // if there are less than three treasures on the board, then the game ends
   },
 
   // Called at the end of the game.

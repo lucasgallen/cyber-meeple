@@ -123,12 +123,7 @@ export function isSpaces(grid: readonly any[]): grid is Spaces {
 }
 
 export interface TigrisEuphratesState {
-  players: {
-    "0": PlayerState;
-    "1": PlayerState;
-    "2": PlayerState;
-    "3"?: PlayerState;
-  };
+  players: { [key in string]: PlayerState };
 
   tileBag: Tile[];
   spaces: Spaces;

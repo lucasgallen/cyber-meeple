@@ -173,7 +173,7 @@ export function initialGameState(playerCount: number): TigrisEuphratesState {
 // Assumes tileBag is shuffled
 export function giveTileToPlayer(
   state: TigrisEuphratesState,
-  playerId: "0" | "1" | "2" | "3",
+  playerId: string,
 ) {
   if (state.tileBag.length < 1) return;
   if (state.players[playerId] === undefined) return;
