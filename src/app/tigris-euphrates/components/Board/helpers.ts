@@ -1,7 +1,9 @@
 import {
   Dynasty,
+  Kingdom,
   PlayerState,
   Space,
+  SpaceId,
   Spaces,
   TigrisEuphratesState,
   Tile,
@@ -189,4 +191,57 @@ export function giveTileToPlayer(
 
   const tile = state.tileBag.pop();
   state.players[playerId]!.tiles.push(tile!);
+}
+
+export function makeNewKingdoms(originalKingdom: Kingdom): Kingdom[] {
+  let uncheckedSpaces = [...originalKingdom.spaces];
+  let newKingdoms: Kingdom[] = [];
+  findKingdoms();
+
+  function findKingdoms() {
+    if (uncheckedSpaces.length < 1) return;
+
+    const newKingdom: Kingdom = {
+      id: "asdf",
+      spaces: findUncheckedNeighbors(uncheckedSpaces[0]),
+    };
+    newKingdoms.push(newKingdom);
+    findKingdoms();
+  }
+
+  function findUncheckedNeighbors(spaceId: SpaceId): SpaceId[] {
+    const space = spaceId.split(",").map((space) => +space) as [number, number];
+    const deltas = [1, -1];
+    const uncheckedNeighborIds: SpaceId[] = [];
+    const neighborIdsInKingdom: SpaceId[] = [];
+
+    deltas.forEach((delta) => {
+      const neighbor = [space[0] + delta, space[1]];
+      const neighborString: SpaceId = `${neighbor[0]},${neighbor[1]}`;
+      if (uncheckedSpaces.includes(neighborString))
+        uncheckedNeighborIds.push(neighborString);
+    });
+    deltas.forEach((delta) => {
+      const neighbor = [space[0], space[1] + delta];
+      const neighborString: SpaceId = `${neighbor[0]},${neighbor[1]}`;
+      if (uncheckedSpaces.includes(neighborString))
+        uncheckedNeighborIds.push(neighborString);
+    });
+
+    uncheckedNeighborIds.forEach((neighbor) => {
+      const uncheckedSpaceIndx = uncheckedSpaces.indexOf(neighbor);
+      uncheckedSpaces = [
+        ...uncheckedSpaces.slice(0, uncheckedSpaceIndx),
+        ...uncheckedSpaces.slice(
+          uncheckedSpaceIndx + 1,
+          uncheckedSpaces.length,
+        ),
+      ];
+      neighborIdsInKingdom.push(...findUncheckedNeighbors(neighbor));
+    });
+
+    return neighborIdsInKingdom;
+  }
+
+  return newKingdoms;
 }

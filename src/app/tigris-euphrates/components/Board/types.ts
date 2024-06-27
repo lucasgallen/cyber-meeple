@@ -67,9 +67,13 @@ export interface PlayerState {
 
 interface Leader {
   civType: CivType;
-}
-type Kingdom = Array<Tile | Leader>;
+};
+export type Kingdom = {
+  id: string;
+  spaces: SpaceId[];
+};
 
+export type SpaceId = `${number},${number}`;
 export type Space = {
   tile: Tile | null;
   river: boolean;
