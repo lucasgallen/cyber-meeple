@@ -9,6 +9,7 @@ import {
   Tile,
   isSpaces,
 } from "./types";
+import { v4 as uuidv4 } from "uuid";
 
 import {
   COLUMN_SPACE_COUNT,
@@ -202,7 +203,7 @@ export function makeNewKingdoms(originalKingdom: Kingdom): Kingdom[] {
     if (uncheckedSpaces.length < 1) return;
 
     const newKingdom: Kingdom = {
-      id: "asdf",
+      id: uuidv4(),
       spaces: findUncheckedNeighbors(uncheckedSpaces[0]),
     };
     newKingdoms.push(newKingdom);
@@ -210,10 +211,18 @@ export function makeNewKingdoms(originalKingdom: Kingdom): Kingdom[] {
   }
 
   function findUncheckedNeighbors(spaceId: SpaceId): SpaceId[] {
+    if (uncheckedSpaces.length < 1) return [];
+
     const space = spaceId.split(",").map((space) => +space) as [number, number];
     const deltas = [1, -1];
     const uncheckedNeighborIds: SpaceId[] = [];
-    const neighborIdsInKingdom: SpaceId[] = [];
+    const neighborIdsInKingdom: SpaceId[] = [spaceId];
+
+    const uncheckedSpaceIndx = uncheckedSpaces.indexOf(spaceId);
+    uncheckedSpaces = [
+      ...uncheckedSpaces.slice(0, uncheckedSpaceIndx),
+      ...uncheckedSpaces.slice(uncheckedSpaceIndx + 1, uncheckedSpaces.length),
+    ];
 
     deltas.forEach((delta) => {
       const neighbor = [space[0] + delta, space[1]];
@@ -229,14 +238,6 @@ export function makeNewKingdoms(originalKingdom: Kingdom): Kingdom[] {
     });
 
     uncheckedNeighborIds.forEach((neighbor) => {
-      const uncheckedSpaceIndx = uncheckedSpaces.indexOf(neighbor);
-      uncheckedSpaces = [
-        ...uncheckedSpaces.slice(0, uncheckedSpaceIndx),
-        ...uncheckedSpaces.slice(
-          uncheckedSpaceIndx + 1,
-          uncheckedSpaces.length,
-        ),
-      ];
       neighborIdsInKingdom.push(...findUncheckedNeighbors(neighbor));
     });
 
