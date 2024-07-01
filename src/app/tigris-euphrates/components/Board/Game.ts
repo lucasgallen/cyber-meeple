@@ -1,7 +1,26 @@
 import type { Game } from "boardgame.io";
 import { TurnOrder } from "boardgame.io/core";
-import { giveTileToPlayer, initialGameState } from "./helpers";
-import { TigrisEuphratesState, Tile } from "./types";
+import { v4 as uuidv4 } from "uuid";
+import {
+  getAdjacentSpaces,
+  getKingdomFromSpace,
+  getSpace,
+  getSpaceId,
+  getSpacesFromKingdom,
+  giveTileToPlayer,
+  initialGameState,
+  isSpaceEmpty,
+} from "./helpers";
+import {
+  Kingdom,
+  Leader,
+  Space,
+  SpaceId,
+  TigrisEuphratesState,
+  Tile,
+  isKingdom,
+  isLeader,
+} from "./types";
 import {
   COLUMN_SPACE_COUNT,
   PLAYER_TILE_CAPACITY,
@@ -33,12 +52,86 @@ export const TigrisEuphrates: Game<TigrisEuphratesState> = {
   },
 
   moves: {
-    MoveLeader: () => {
+    // TODO: rethink kingdoms
+    // assumes the placement is legal -- UI needs to validate the move
+    MoveLeader: (
+      { G, events },
+      leader: Leader,
+      space: { from?: [number, number]; to: [number, number] },
+    ) => {
       // select leader from the board or from supply
       // place leader into any empty, non-river space that does not join two kingdoms
       // a leader cannot separate two kingdoms and then join the same two kingdoms
-      //
-      // if leader is placed into another kingdom with a leader of the same color, then start the AttackLeader Stage with the defending player
+
+      const leaderCiv = leader.civType;
+      const toSpace = getSpace(space.to, G.spaces);
+
+      // if space.from is defined, remove leader
+      if (space.from !== undefined) {
+        const boardSpace = getSpace(space.from, G.spaces);
+        boardSpace.leader = null;
+      }
+
+      // place leader on space.to
+      toSpace.leader = leader;
+
+      // search adjacent spaces for a kingdom (there can only be one; else throw)
+      const adjacentSpaces = getAdjacentSpaces(space.to, G.spaces);
+      let spaceWithKingdom: SpaceId | undefined;
+      const adjacentKingdoms = adjacentSpaces
+        .map(({ id }) => {
+          const kingdom = getKingdomFromSpace(id, G.kingdoms);
+          if (kingdom !== undefined) spaceWithKingdom = id;
+
+          return kingdom;
+        })
+        .filter(isKingdom);
+
+      if (adjacentKingdoms.length > 1) {
+        throw Error("A leader can only be placed adjacent to one kingdom");
+      }
+      const adjacentKingdom = adjacentKingdoms[0];
+
+      // check adjacent spaces for red temple and other tiles
+      const adjacentNonEmptySpaces = adjacentSpaces.filter((space) => {
+        const isNonEmpty = !isSpaceEmpty(space);
+        const isNotInKingdom = space.id !== spaceWithKingdom;
+        return isNonEmpty && isNotInKingdom;
+      });
+
+      // create a new kingdom with other adjcent tiles
+      if (adjacentKingdom === undefined && adjacentNonEmptySpaces.length > 0) {
+        G.kingdoms.push({
+          id: uuidv4(),
+          spaces: [
+            getSpaceId(space.to),
+            ...adjacentNonEmptySpaces.map(({ id }) => id),
+          ],
+        });
+        // if they aren't in the same kingdom, then add them along with the leader to the kingdom
+      } else {
+        adjacentKingdom.spaces = [
+          getSpaceId(space.to),
+          ...adjacentKingdom.spaces,
+          ...adjacentNonEmptySpaces.map(({ id }) => id),
+        ];
+      }
+
+      // if leader was added to a kingdom, search that kingdom for a leader that has the same leaderCiv
+      // if that exists, get the dynasty of that opposing leader
+      const opposingDynasty = getSpacesFromKingdom(adjacentKingdom, G.spaces)
+        .map(({ leader }) => leader)
+        .filter(isLeader)
+        .find(({ civType }) => civType === leaderCiv)?.dynasty;
+      if (opposingDynasty !== undefined) {
+        // then get the opposing player with that matching dynasty
+        // then start the AttackLeader stage with that player
+        // TODO: Send correct values to this event
+        events.setActivePlayers({
+          currentPlayer: "AttackLeader",
+          value: { "": "AttackLeader" },
+        });
+      }
     },
     PlaceCivilizationTile: () => {
       // place civilization tile onto any empty space that does not join three or more kingdoms
@@ -53,6 +146,7 @@ export const TigrisEuphrates: Game<TigrisEuphratesState> = {
       //
       // if the tile forms a square of four like-colored tiles, the player may form a monument
     },
+
     PlaceCatastropheTile: () => {
       // place catastrophe tile on any empty space that does not have treasure or a monument
       // If this leaves a leader no longer next to a red temple, move the leader off the board.

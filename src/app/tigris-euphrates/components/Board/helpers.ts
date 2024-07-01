@@ -2,11 +2,13 @@ import {
   Dynasty,
   Kingdom,
   PlayerState,
+  Row,
   Space,
   SpaceId,
   Spaces,
   TigrisEuphratesState,
   Tile,
+  isSpace,
   isSpaces,
 } from "./types";
 import { v4 as uuidv4 } from "uuid";
@@ -25,6 +27,10 @@ import {
   TEMPLE_TILE_COUNT,
   TEMPLE_TREASURE_SPACES,
 } from "./constants";
+
+export function getSpaceId(coord: [number, number]): SpaceId {
+  return `${coord[0]},${coord[1]}`;
+}
 
 export function updateKingdoms() {
   // define the current set of kingdoms
@@ -69,30 +75,36 @@ export function initialPlayerState(
   };
 }
 
-function blankSpace(): Space {
+function blankSpace(id: SpaceId): Space {
   return {
+    id,
     tile: null,
     river: false,
     treasure: false,
     monument: null,
+    leader: null,
   };
 }
 
-function riverSpace(): Space {
+function riverSpace(id: SpaceId): Space {
   return {
+    id,
     tile: null,
     river: true,
     treasure: false,
     monument: null,
+    leader: null,
   };
 }
 
-function templeTreasureSpace(): Space {
+function templeTreasureSpace(id: SpaceId): Space {
   return {
+    id,
     tile: { civType: TEMPLE, facedown: false, river: false },
     river: false,
     treasure: true,
     monument: null,
+    leader: null,
   };
 }
 
@@ -101,16 +113,18 @@ export function initialSpaces(): Spaces {
     Array(ROW_SPACE_COUNT).fill(null),
   );
   RIVER_SPACES.forEach((tuple) => {
-    nullSpaces[tuple[0]][tuple[1]] = riverSpace();
+    nullSpaces[tuple[0]][tuple[1]] = riverSpace(`${tuple[0]},${tuple[1]}`);
   });
   TEMPLE_TREASURE_SPACES.forEach((tuple) => {
-    nullSpaces[tuple[0]][tuple[1]] = templeTreasureSpace();
+    nullSpaces[tuple[0]][tuple[1]] = templeTreasureSpace(
+      `${tuple[0]},${tuple[1]}`,
+    );
   });
 
   for (let i = 0; i < nullSpaces.length; i++) {
     for (let j = 0; j < nullSpaces[i].length; j++) {
       if (nullSpaces[i][j] === null) {
-        nullSpaces[i][j] = blankSpace();
+        nullSpaces[i][j] = blankSpace(`${i},${j}`);
       }
     }
   }
@@ -118,6 +132,76 @@ export function initialSpaces(): Spaces {
   if (isSpaces(nullSpaces)) return nullSpaces;
 
   throw Error("Failed to initialize board spaces");
+}
+
+export function isSpaceEmpty(space: Space): boolean {
+  if (space.tile !== null) return false;
+  if (space.monument !== null) return false;
+  if (space.leader !== null) return false;
+
+  return true;
+}
+
+export function getSpace(coord: [number, number], rows: readonly Row[]): Space {
+  const id = `${coord[0]},${coord[1]}`;
+  const spaces = rows.reduce(
+    (current: Space[], row) => [...current, ...row],
+    [],
+  );
+  const space = spaces.find(({ id: spaceId }) => spaceId === id);
+
+  if (space === undefined) {
+    throw Error(`Could not find space with id "${id}"`);
+  }
+
+  return space;
+}
+
+export function getAdjacentSpaces(
+  coord: [number, number],
+  spaces: readonly Row[],
+): Space[] {
+  const adjacentSpaces = [
+    [1, 0],
+    [0, 1],
+    [-1, 0],
+    [0, -1],
+  ].map((displacement) => {
+    const displacedSpaceCoord: [number, number] = [
+      coord[0] + displacement[0],
+      coord[1] + displacement[1],
+    ];
+    let displacedSpace: Space | undefined;
+    try {
+      displacedSpace = getSpace(displacedSpaceCoord, spaces);
+    } catch {}
+
+    if (displacedSpace === undefined) return;
+
+    return displacedSpace;
+  });
+  return adjacentSpaces.filter(isSpace);
+}
+
+export function getKingdomFromSpace(id: SpaceId, kingdoms: Kingdom[]) {
+  return kingdoms.find(({ spaces }) => {
+    return spaces.includes(id);
+  });
+}
+
+export function getSpacesFromKingdom(
+  kingdom: Kingdom,
+  rows: readonly Row[],
+): Space[] {
+  return kingdom.spaces
+    .map((space) => {
+      const coord = space.split(",").map((spaceStr) => +spaceStr) as [
+        number,
+        number,
+      ];
+      return getSpace(coord, rows);
+    })
+    .filter(isSpace);
 }
 
 function initialTileBag(): Tile[] {
@@ -225,14 +309,14 @@ export function makeNewKingdoms(originalKingdom: Kingdom): Kingdom[] {
     ];
 
     deltas.forEach((delta) => {
-      const neighbor = [space[0] + delta, space[1]];
-      const neighborString: SpaceId = `${neighbor[0]},${neighbor[1]}`;
+      const neighbor: [number, number] = [space[0] + delta, space[1]];
+      const neighborString: SpaceId = getSpaceId(neighbor);
       if (uncheckedSpaces.includes(neighborString))
         uncheckedNeighborIds.push(neighborString);
     });
     deltas.forEach((delta) => {
-      const neighbor = [space[0], space[1] + delta];
-      const neighborString: SpaceId = `${neighbor[0]},${neighbor[1]}`;
+      const neighbor: [number, number] = [space[0], space[1] + delta];
+      const neighborString: SpaceId = getSpaceId(neighbor);
       if (uncheckedSpaces.includes(neighborString))
         uncheckedNeighborIds.push(neighborString);
     });
