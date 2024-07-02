@@ -2,9 +2,11 @@ import { Ctx, DefaultPluginAPIs } from "boardgame.io";
 import { v4 as uuidv4 } from "uuid";
 import {
   CivType,
+  CivilizationTile,
   Kingdom,
   Leader,
-  Row,
+  Monument,
+  Space,
   SpaceId,
   TigrisEuphratesState,
   isKingdom,
@@ -19,6 +21,92 @@ import {
 } from "./space";
 import { getSpacesFromKingdom } from "./kingdom";
 import { EventsAPI } from "boardgame.io/dist/types/src/plugins/plugin-events";
+import { SETTLEMENT } from "./constants";
+
+// TODO: validate move in UI
+// - does not join three or more kingdoms
+// - river tiles and spaces must match
+export function placeCivilizationTile(
+  {
+    G,
+    events,
+  }: Record<string, unknown> &
+    DefaultPluginAPIs & { ctx: Ctx; G: TigrisEuphratesState },
+  tile: CivilizationTile,
+  toSpace: [number, number],
+) {
+  const boardSpace = getSpace(toSpace, G.spaces);
+  boardSpace.tile = tile;
+
+  // if the tile joins two kingdoms, then put a unification tile on it and resolve the conflict in the UnificationConflict Stage
+  const adjacentSpaces = getAdjacentSpaces(toSpace, G.spaces);
+  const adjacentKingdomIds = getAdjacentKingdomIds(adjacentSpaces, G.kingdoms);
+  if (adjacentKingdomIds.length > 1) {
+    events.setActivePlayers({
+      currentPlayer: "UnificationConflict",
+    });
+
+    return;
+  }
+
+  // if the tile matches the civilization of a leader in the kingdom, then give one victory point
+  // of that color to the leader's player
+  const kingdom = getKingdomFromSpace(boardSpace.id, G.kingdoms);
+  if (kingdom !== undefined) giveVictoryPointForLeader(kingdom, tile, G);
+}
+
+export function formMonument(
+  _: Record<string, unknown> & DefaultPluginAPIs & { ctx: Ctx },
+  spaces: [Space, Space, Space, Space],
+  monument: Monument,
+) {
+  // if the tile forms a square of four like-colored tiles, the player may form a monument
+  spaces.forEach((space) => {
+    space.monument = monument;
+  });
+}
+
+function getAdjacentKingdomIds(spaces: Space[], kingdoms: Kingdom[]) {
+  return spaces
+    .map((toSpace) => {
+      const kingdom = getKingdomFromSpace(toSpace.id, kingdoms);
+      return kingdom?.id;
+    })
+    .reduce((current: string[], kingdomId) => {
+      if (kingdomId === undefined) return current;
+      if (current.some((id) => id === kingdomId)) return current;
+      return [...current, kingdomId];
+    }, []);
+}
+
+function giveVictoryPointForLeader(
+  kingdom: Kingdom,
+  tile: CivilizationTile,
+  G: TigrisEuphratesState,
+) {
+  let playerId: string | undefined;
+  const kingdomLeaders: Leader[] = getSpacesFromKingdom(kingdom, G.spaces)
+    .map(({ leader }) => leader)
+    .filter(isLeader);
+  const leaderMatchingCiv =
+    kingdomLeaders.find((leader) => {
+      return leader.civType === tile.civType;
+    }) ??
+    // else if the kingdom has a black leader, give the point to the black leader's player
+    kingdomLeaders.find((leader) => {
+      return leader.civType === SETTLEMENT;
+    });
+
+  Object.keys(G.players).forEach((key) => {
+    if (G.players[key].dynasty === leaderMatchingCiv?.dynasty) {
+      playerId = key;
+      return;
+    }
+  });
+
+  if (playerId) G.players[playerId].points[tile.civType] += 1;
+  // else no points given
+}
 
 // TODO: assumes the placement is legal -- UI needs to validate the move
 export function moveLeader(

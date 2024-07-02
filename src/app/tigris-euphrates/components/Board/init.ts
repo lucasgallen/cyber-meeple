@@ -10,23 +10,32 @@ import {
   TEMPLE_TREASURE_SPACES,
 } from "./constants";
 import { initialSpaces } from "./space";
-import { Dynasty, PlayerState, TigrisEuphratesState, Tile } from "./types";
+import {
+  Dynasty,
+  Leader,
+  Monument,
+  PlayerState,
+  TigrisEuphratesState,
+  Tile,
+} from "./types";
 
 export function initialPlayerState(
   dynasty: Dynasty,
   tiles: Tile[],
 ): PlayerState {
+  const leaders: Leader[] = [
+    { dynasty, civType: FARM },
+    { dynasty, civType: MARKET },
+    { dynasty, civType: SETTLEMENT },
+    { dynasty, civType: TEMPLE },
+  ];
+
   return {
     dynasty,
     tiles,
-    leaders: 4,
-    points: {
-      blue: 0,
-      black: 0,
-      green: 0,
-      red: 0,
-      treasure: 0,
-    },
+    leaders,
+    points: { [FARM]: 0, [MARKET]: 0, [SETTLEMENT]: 0, [TEMPLE]: 0 },
+    treasures: 0,
   };
 }
 
@@ -56,6 +65,7 @@ function initialTileBag(): Tile[] {
 }
 
 export function initialGameState(playerCount: number): TigrisEuphratesState {
+  const monuments = Object.values(Monument) as Monument[];
   if (playerCount === 4)
     return {
       spaces: initialSpaces(),
@@ -66,6 +76,7 @@ export function initialGameState(playerCount: number): TigrisEuphratesState {
         "1": initialPlayerState(Dynasty.BULL, []),
         "2": initialPlayerState(Dynasty.LION, []),
       },
+      remainingMonuments: monuments,
     };
 
   return {
@@ -78,5 +89,6 @@ export function initialGameState(playerCount: number): TigrisEuphratesState {
       "2": initialPlayerState(Dynasty.LION, []),
       "3": initialPlayerState(Dynasty.URN, []),
     },
+    remainingMonuments: monuments,
   };
 }

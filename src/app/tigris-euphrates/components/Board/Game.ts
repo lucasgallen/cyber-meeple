@@ -9,7 +9,7 @@ import {
   ROW_SPACE_COUNT,
 } from "./constants";
 import { giveTileToPlayer } from "./helpers";
-import { moveLeader } from "./moves";
+import { formMonument, moveLeader, placeCivilizationTile } from "./moves";
 
 // Player Victory points:
 //  - Red, Blue, Green, Black, Treasure (wild)
@@ -37,19 +37,8 @@ export const TigrisEuphrates: Game<TigrisEuphratesState> = {
 
   moves: {
     MoveLeader: moveLeader,
-    PlaceCivilizationTile: () => {
-      // place civilization tile onto any empty space that does not join three or more kingdoms
-      // river tiles and spaces must match
-      //
-      // if the tile matches the color of a leader in the kingdom, then give one victory point
-      // of that color to the leader's player
-      // else if the kingdom has a black leader, give the point to the black leader's player
-      // else no points given
-      //
-      // if the tile joins two kingdoms, then put a unification tile on it and resolve the conflict in the UnificationConflict Stage
-      //
-      // if the tile forms a square of four like-colored tiles, the player may form a monument
-    },
+    PlaceCivilizationTile: placeCivilizationTile,
+    FormMonument: formMonument,
 
     PlaceCatastropheTile: () => {
       // place catastrophe tile on any empty space that does not have treasure or a monument
@@ -75,29 +64,6 @@ export const TigrisEuphrates: Game<TigrisEuphratesState> = {
         giveTileToPlayer(G, ctx.currentPlayer);
       }
     },
-
-    // short-form move.
-    // A: ({ G, ctx, playerID, events, random, ...plugins }, ...args) => {},
-
-    // long-form move.
-    /*
-    B: {
-      // The move function.
-      move: ({ G, ctx, playerID, events, random, ...plugins }, ...args) => {},
-      // Prevents undoing the move.
-      // Can also be a function: ({ G, ctx }) => true/false
-      undoable: false,
-      // Prevents the move arguments from showing up in the log.
-      redact: true,
-      // Prevents the move from running on the client.
-      client: false,
-      // Prevents the move counting towards a player’s number of moves.
-      noLimit: true,
-      // Processes the move even if it was dispatched from an out-of-date client.
-      // This can be risky; check the validity of the state update in your move.
-      ignoreStaleStateID: true,
-    },
-    */
   },
 
   // Everything below is OPTIONAL.

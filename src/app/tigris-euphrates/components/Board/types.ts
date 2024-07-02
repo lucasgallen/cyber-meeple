@@ -18,7 +18,7 @@ export enum Dynasty {
 
 // Monument
 // - 6 total; each a combination of two colors/civ tiles
-enum Monument {
+export enum Monument {
   RED_BLUE,
   RED_GREEN,
   RED_BLACK,
@@ -59,15 +59,10 @@ export type Tile =
 
 export type PlayerState = {
   dynasty: Dynasty;
-  points: {
-    red: number;
-    blue: number;
-    green: number;
-    black: number;
-    treasure: number;
-  };
+  points: { [C in CivType]: number };
+  treasures: number;
   tiles: Tile[];
-  leaders: 0 | 1 | 2 | 3 | 4;
+  leaders: Leader[];
 };
 
 export type Leader = {
@@ -153,10 +148,19 @@ export function isLeader(leader: unknown): leader is Leader {
   return hasDynasty && hasCivType;
 }
 
+export function isCivilizationTile(
+  tile: Tile | null,
+): tile is CivilizationTile {
+  if (tile === null) return false;
+  if ((tile as CivilizationTile).civType === undefined) return false;
+  return true;
+}
+
 export interface TigrisEuphratesState {
   players: { [key in string]: PlayerState };
 
   tileBag: Tile[];
   spaces: Spaces;
   kingdoms: Kingdom[];
+  remainingMonuments: Monument[];
 }

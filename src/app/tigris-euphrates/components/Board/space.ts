@@ -11,6 +11,7 @@ import {
   Space,
   SpaceId,
   Spaces,
+  isCivilizationTile,
   isSpace,
   isSpaces,
 } from "./types";
@@ -92,6 +93,66 @@ export function getAdjacentSpaces(
     return displacedSpace;
   });
   return adjacentSpaces.filter(isSpace);
+}
+
+// TODO: use this in the UI to let player choose to create a monument
+export function canSpaceFormMonument(
+  space: Space,
+  spaces: readonly Row[],
+): false | [Space, Space, Space][] {
+  if (!isCivilizationTile(space.tile)) return false;
+  let potentialMonumentSpaces: [Space, Space, Space][] = [];
+  const potentialMonumentCoordinateSets: readonly [
+    [number, number],
+    [number, number],
+    [number, number],
+  ][] = [
+    [
+      [0, 1],
+      [1, 1],
+      [1, 0],
+    ],
+    [
+      [1, 0],
+      [1, -1],
+      [0, -1],
+    ],
+    [
+      [0, -1],
+      [-1, -1],
+      [-1, 0],
+    ],
+    [
+      [-1, 0],
+      [-1, 1],
+      [0, 1],
+    ],
+  ];
+  const civ = space.tile.civType;
+  const spaceCoords = space.id
+    .split(",")
+    .map((coordString) => +coordString) as [number, number];
+
+  potentialMonumentCoordinateSets.forEach((coordSet) => {
+    let areSameCiv = true;
+    const spacesSet = coordSet.map((coordDelta) => {
+      const newCoord: [number, number] = [
+        coordDelta[0] + spaceCoords[0],
+        coordDelta[1] + spaceCoords[1],
+      ];
+      const space = getSpace(newCoord, spaces);
+      if (!isCivilizationTile(space.tile) || space.tile.civType !== civ) {
+        areSameCiv = false;
+      }
+      return space;
+    }) as [Space, Space, Space];
+
+    if (areSameCiv) potentialMonumentSpaces.push(spacesSet);
+  });
+
+  if (potentialMonumentSpaces.length === 0) return false;
+
+  return potentialMonumentSpaces;
 }
 
 export function getKingdomFromSpace(id: SpaceId, kingdoms: Kingdom[]) {
