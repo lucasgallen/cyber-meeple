@@ -1,12 +1,15 @@
 import type { Game } from "boardgame.io";
 import { TurnOrder } from "boardgame.io/core";
-import { giveTileToPlayer, initialGameState } from "./helpers";
+import { initialGameState } from "./init";
+
 import { TigrisEuphratesState, Tile } from "./types";
 import {
   COLUMN_SPACE_COUNT,
   PLAYER_TILE_CAPACITY,
   ROW_SPACE_COUNT,
 } from "./constants";
+import { giveTileToPlayer } from "./helpers";
+import { moveLeader } from "./moves";
 
 // Player Victory points:
 //  - Red, Blue, Green, Black, Treasure (wild)
@@ -33,13 +36,7 @@ export const TigrisEuphrates: Game<TigrisEuphratesState> = {
   },
 
   moves: {
-    MoveLeader: () => {
-      // select leader from the board or from supply
-      // place leader into any empty, non-river space that does not join two kingdoms
-      // a leader cannot separate two kingdoms and then join the same two kingdoms
-      //
-      // if leader is placed into another kingdom with a leader of the same color, then start the AttackLeader Stage with the defending player
-    },
+    MoveLeader: moveLeader,
     PlaceCivilizationTile: () => {
       // place civilization tile onto any empty space that does not join three or more kingdoms
       // river tiles and spaces must match
@@ -53,6 +50,7 @@ export const TigrisEuphrates: Game<TigrisEuphratesState> = {
       //
       // if the tile forms a square of four like-colored tiles, the player may form a monument
     },
+
     PlaceCatastropheTile: () => {
       // place catastrophe tile on any empty space that does not have treasure or a monument
       // If this leaves a leader no longer next to a red temple, move the leader off the board.

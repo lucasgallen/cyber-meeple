@@ -1,3 +1,4 @@
+import { isArray } from "util";
 import {
   COLUMN_SPACE_COUNT,
   FARM,
@@ -28,7 +29,11 @@ enum Monument {
 
 // Civilization Tile
 // - Temple (red), Farm (blue), Market (green), Settlement (black)
-type CivType = typeof TEMPLE | typeof FARM | typeof MARKET | typeof SETTLEMENT;
+export type CivType =
+  | typeof TEMPLE
+  | typeof FARM
+  | typeof MARKET
+  | typeof SETTLEMENT;
 
 interface TileInterface {
   facedown: boolean;
@@ -52,7 +57,7 @@ export type Tile =
   | DynastyTile
   | CivilizationTile;
 
-export interface PlayerState {
+export type PlayerState = {
   dynasty: Dynasty;
   points: {
     red: number;
@@ -63,9 +68,10 @@ export interface PlayerState {
   };
   tiles: Tile[];
   leaders: 0 | 1 | 2 | 3 | 4;
-}
+};
 
-interface Leader {
+export type Leader = {
+  dynasty: Dynasty;
   civType: CivType;
 };
 export type Kingdom = {
@@ -75,15 +81,16 @@ export type Kingdom = {
 
 export type SpaceId = `${number},${number}`;
 export type Space = {
+  id: SpaceId;
   tile: Tile | null;
   river: boolean;
   treasure: boolean;
   monument: Monument | null;
+  leader: Leader | null;
 };
 
 // 16x11 square grid game board
-type Row = readonly [
-  Space,
+export type Row = readonly [
   Space,
   Space,
   Space,
@@ -119,11 +126,31 @@ export function isSpaces(grid: readonly any[]): grid is Spaces {
   for (let i = 0; i < grid.length; i++) {
     for (let j = 0; j < grid[i].length; j++) {
       if (grid[i].length !== ROW_SPACE_COUNT) return false;
-      if ((grid[i][j] as Space).tile === undefined) return false;
+      if (!isSpace(grid[i][j])) return false;
+      //if ((grid[i][j] as Space).tile === undefined) return false;
     }
   }
 
   return true;
+}
+
+export function isSpace(space: unknown): space is Space {
+  const hasTile = (space as Space).tile !== undefined;
+  return hasTile;
+}
+
+export function isKingdom(kingdom: unknown): kingdom is Kingdom {
+  const hasId = typeof (kingdom as Kingdom).id === "string";
+  const hasSpaces = isArray((kingdom as Kingdom).spaces);
+
+  return hasId && hasSpaces;
+}
+
+export function isLeader(leader: unknown): leader is Leader {
+  const hasDynasty = typeof (leader as Leader).dynasty === "string";
+  const hasCivType = typeof (leader as Leader).civType === "string";
+
+  return hasDynasty && hasCivType;
 }
 
 export interface TigrisEuphratesState {

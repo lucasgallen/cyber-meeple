@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Kingdom, SpaceId } from "./types";
-import { makeNewKingdoms } from "./helpers";
+import { makeNewKingdoms } from "./kingdom";
 
 describe("makeNewKingdoms", () => {
   it("keeps a kingdom intact when still connected", () => {
