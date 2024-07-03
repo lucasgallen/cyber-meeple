@@ -140,11 +140,13 @@ export function isSpaces(grid: readonly any[]): grid is Spaces {
 }
 
 export function isSpace(space: unknown): space is Space {
+  if (space === undefined) return false;
   const hasTile = (space as Space).tile !== undefined;
   return hasTile;
 }
 
 export function isKingdom(kingdom: unknown): kingdom is Kingdom {
+  if (kingdom === undefined) return false;
   const hasId = typeof (kingdom as Kingdom).id === "string";
   const hasSpaces = isArray((kingdom as Kingdom).spaces);
 
@@ -152,8 +154,10 @@ export function isKingdom(kingdom: unknown): kingdom is Kingdom {
 }
 
 export function isLeader(leader: unknown): leader is Leader {
-  const hasDynasty = typeof (leader as Leader).dynasty === "string";
-  const hasCivType = typeof (leader as Leader).civType === "string";
+  if (leader === undefined) return false;
+  if (leader === null) return false;
+  const hasDynasty = (leader as Leader).dynasty !== undefined;
+  const hasCivType = (leader as Leader).civType !== undefined;
 
   return hasDynasty && hasCivType;
 }

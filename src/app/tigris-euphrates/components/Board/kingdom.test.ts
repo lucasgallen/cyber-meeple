@@ -1,6 +1,41 @@
 import { describe, expect, it } from "vitest";
-import { Kingdom, SpaceId } from "./types";
-import { makeNewKingdoms } from "./kingdom";
+import { Dynasty, Kingdom, Leader, Space, SpaceId } from "./types";
+import { getSpacesFromKingdom, makeNewKingdoms } from "./kingdom";
+import { initialGameState } from "./init";
+import { FARM, TEMPLE } from "./constants";
+
+describe("getSpacesFromKingdom", () => {
+  it("returns the correct spaces", () => {
+    const G = initialGameState(3);
+    const leader: Leader = { dynasty: Dynasty.BULL, civType: FARM };
+    const kingdoms: Kingdom[] = [{ id: "two", spaces: ["0,4", "0,5"] }];
+    G.kingdoms = kingdoms;
+    const spaces: Space[] = getSpacesFromKingdom(kingdoms[0], G.spaces);
+    G.spaces[0][4].leader = leader;
+
+    const expectedSpaces: Space[] = [
+      {
+        id: "0,4",
+        tile: null,
+        leader,
+        river: false,
+        treasure: false,
+        monument: null,
+      },
+      {
+        id: "0,5",
+        tile: null,
+        leader: null,
+        river: true,
+        treasure: false,
+        monument: null,
+      },
+    ];
+
+    expect(spaces).toHaveLength(2);
+    expect(spaces).toMatchObject(expectedSpaces);
+  });
+});
 
 describe("makeNewKingdoms", () => {
   it("keeps a kingdom intact when still connected", () => {

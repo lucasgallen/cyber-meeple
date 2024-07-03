@@ -1,4 +1,4 @@
-import { Ctx, DefaultPluginAPIs } from "boardgame.io";
+import { ActivePlayersArg, Ctx, DefaultPluginAPIs } from "boardgame.io";
 import { v4 as uuidv4 } from "uuid";
 import {
   CivType,
@@ -24,6 +24,7 @@ import {
 import { getSpacesFromKingdom } from "./kingdom";
 import { EventsAPI } from "boardgame.io/dist/types/src/plugins/plugin-events";
 import { SETTLEMENT } from "./constants";
+import { Events } from "boardgame.io/dist/types/src/plugins/events/events";
 
 export function swapTiles({
   G,
@@ -68,15 +69,17 @@ function giveTileToPlayer(state: TigrisEuphratesState, playerId: string) {
 // TODO: validate move in UI
 // - does not join three or more kingdoms
 // - river tiles and spaces must match
-export function placeCivilizationTile(
-  {
-    G,
-    events,
-  }: Record<string, unknown> &
-    DefaultPluginAPIs & { ctx: Ctx; G: TigrisEuphratesState },
-  tile: CivilizationTile,
-  toSpace: [number, number],
-) {
+export function placeCivilizationTile({
+  G,
+  setActivePlayers,
+  tile,
+  toSpace,
+}: {
+  G: TigrisEuphratesState;
+  setActivePlayers: (arg: ActivePlayersArg) => void;
+  tile: CivilizationTile;
+  toSpace: [number, number];
+}) {
   const boardSpace = getSpace(toSpace, G.spaces);
   boardSpace.tile = tile;
 
@@ -84,17 +87,22 @@ export function placeCivilizationTile(
   const adjacentSpaces = getAdjacentSpaces(toSpace, G.spaces);
   const adjacentKingdomIds = getAdjacentKingdomIds(adjacentSpaces, G.kingdoms);
   if (adjacentKingdomIds.length > 1) {
-    events.setActivePlayers({
+    setActivePlayers({
       currentPlayer: "UnificationConflict",
     });
 
+    return;
+  } else if (adjacentKingdomIds.length === 0) {
     return;
   }
 
   // if the tile matches the civilization of a leader in the kingdom, then give one victory point
   // of that color to the leader's player
-  const kingdom = getKingdomFromSpace(boardSpace.id, G.kingdoms);
-  if (kingdom !== undefined) giveVictoryPointForLeader(kingdom, tile, G);
+  const kingdom = G.kingdoms.find(({ id }) => id === adjacentKingdomIds[0]);
+  if (!isKingdom(kingdom)) return;
+
+  kingdom.spaces.push(boardSpace.id);
+  giveVictoryPointForLeader(kingdom, tile, G);
 }
 
 export function formMonument(

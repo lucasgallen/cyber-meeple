@@ -66,7 +66,7 @@ function initialTileBag(): Tile[] {
 
 export function initialGameState(playerCount: number): TigrisEuphratesState {
   const monuments = Object.values(Monument) as Monument[];
-  if (playerCount === 4)
+  if (playerCount === 3)
     return {
       spaces: initialSpaces(),
       kingdoms: [],

@@ -2,7 +2,7 @@ import type { Game } from "boardgame.io";
 import { TurnOrder } from "boardgame.io/core";
 import { initialGameState } from "./init";
 
-import { TigrisEuphratesState, Tile } from "./types";
+import { CivilizationTile, TigrisEuphratesState, Tile } from "./types";
 import {
   COLUMN_SPACE_COUNT,
   PLAYER_TILE_CAPACITY,
@@ -42,7 +42,17 @@ export const TigrisEuphrates: Game<TigrisEuphratesState> = {
 
   moves: {
     MoveLeader: moveLeader,
-    PlaceCivilizationTile: placeCivilizationTile,
+    PlaceCivilizationTile: (
+      { G, events },
+      tile: CivilizationTile,
+      toSpace: [number, number],
+    ) =>
+      placeCivilizationTile({
+        G,
+        setActivePlayers: events.setActivePlayers,
+        tile,
+        toSpace,
+      }),
     FormMonument: formMonument,
 
     PlaceCatastropheTile: () => {
