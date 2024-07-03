@@ -41,11 +41,12 @@ interface TileInterface {
 }
 
 interface CatastropheTile extends TileInterface {
+  catastrophe: true;
   facedown: false;
 }
 interface UnificationTile extends TileInterface {}
 interface DynastyTile extends TileInterface {
-  type: Dynasty;
+  dynasty: Dynasty;
 }
 export interface CivilizationTile extends TileInterface {
   civType: CivType;
@@ -116,11 +117,20 @@ export type Spaces = readonly [
   Row,
 ];
 
+export interface TigrisEuphratesState {
+  players: { [key in string]: PlayerState };
+
+  tileBag: Tile[];
+  spaces: Spaces;
+  kingdoms: Kingdom[];
+  remainingMonuments: Monument[];
+}
+
 export function isSpaces(grid: readonly any[]): grid is Spaces {
-  if (grid.length !== COLUMN_SPACE_COUNT) return false;
+  if (grid.length !== ROW_SPACE_COUNT) return false;
   for (let i = 0; i < grid.length; i++) {
     for (let j = 0; j < grid[i].length; j++) {
-      if (grid[i].length !== ROW_SPACE_COUNT) return false;
+      if (grid[i].length !== COLUMN_SPACE_COUNT) return false;
       if (!isSpace(grid[i][j])) return false;
       //if ((grid[i][j] as Space).tile === undefined) return false;
     }
@@ -154,13 +164,4 @@ export function isCivilizationTile(
   if (tile === null) return false;
   if ((tile as CivilizationTile).civType === undefined) return false;
   return true;
-}
-
-export interface TigrisEuphratesState {
-  players: { [key in string]: PlayerState };
-
-  tileBag: Tile[];
-  spaces: Spaces;
-  kingdoms: Kingdom[];
-  remainingMonuments: Monument[];
 }

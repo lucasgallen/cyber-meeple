@@ -9,7 +9,12 @@ import {
   ROW_SPACE_COUNT,
 } from "./constants";
 import { giveTileToPlayer } from "./helpers";
-import { formMonument, moveLeader, placeCivilizationTile } from "./moves";
+import {
+  formMonument,
+  moveLeader,
+  placeCivilizationTile,
+  swapTiles,
+} from "./moves";
 
 // Player Victory points:
 //  - Red, Blue, Green, Black, Treasure (wild)
@@ -46,24 +51,14 @@ export const TigrisEuphrates: Game<TigrisEuphratesState> = {
     },
 
     // discard up to six tiles from player's supply and give player that many new tiles
-    SwapTiles: ({ G, ctx, events, random }, tileIndices: number[]) => {
-      if (G.tileBag.length < tileIndices.length) events.endGame();
-
-      let playerTiles: Tile[] = [];
-
-      // discard
-      for (let i = 0; i < G.players[ctx.currentPlayer].tiles.length; i++) {
-        if (!tileIndices.includes(i))
-          playerTiles.push(G.players[ctx.currentPlayer].tiles[i]);
-      }
-      G.players[ctx.currentPlayer].tiles = playerTiles;
-
-      // draw
-      random.Shuffle(G.tileBag);
-      for (let i = 0; i < G.players[ctx.currentPlayer].tiles.length; i++) {
-        giveTileToPlayer(G, ctx.currentPlayer);
-      }
-    },
+    SwapTiles: ({ G, ctx, events, random }, tileIndices: number[]) =>
+      swapTiles({
+        G,
+        currentPlayer: ctx.currentPlayer,
+        endGame: events.endGame,
+        shuffle: random.Shuffle,
+        tileIndices,
+      }),
   },
 
   // Everything below is OPTIONAL.

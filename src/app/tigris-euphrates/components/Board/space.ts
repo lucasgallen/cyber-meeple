@@ -21,9 +21,9 @@ export function getSpaceId(coord: [number, number]): SpaceId {
 }
 
 export function initialSpaces(): Spaces {
-  let nullSpaces = Array(COLUMN_SPACE_COUNT).fill(
-    Array(ROW_SPACE_COUNT).fill(null),
-  );
+  let nullSpaces = new Array(ROW_SPACE_COUNT).fill(null).map(() => {
+    return new Array(COLUMN_SPACE_COUNT).fill(null);
+  });
   RIVER_SPACES.forEach((tuple) => {
     nullSpaces[tuple[0]][tuple[1]] = riverSpace(`${tuple[0]},${tuple[1]}`);
   });

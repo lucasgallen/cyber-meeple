@@ -6,9 +6,11 @@ import {
   Kingdom,
   Leader,
   Monument,
+  PlayerState,
   Space,
   SpaceId,
   TigrisEuphratesState,
+  Tile,
   isKingdom,
   isLeader,
 } from "./types";
@@ -22,6 +24,46 @@ import {
 import { getSpacesFromKingdom } from "./kingdom";
 import { EventsAPI } from "boardgame.io/dist/types/src/plugins/plugin-events";
 import { SETTLEMENT } from "./constants";
+
+export function swapTiles({
+  G,
+  currentPlayer,
+  endGame,
+  shuffle,
+  tileIndices,
+}: {
+  G: TigrisEuphratesState;
+  currentPlayer: string;
+  endGame: () => void;
+  shuffle: <T>(deck: T[]) => T[];
+  tileIndices: number[];
+}) {
+  if (G.tileBag.length < tileIndices.length) endGame();
+
+  let playerTiles: Tile[] = [];
+
+  // discard
+  for (let i = 0; i < G.players[currentPlayer].tiles.length; i++) {
+    if (!tileIndices.includes(i))
+      playerTiles.push(G.players[currentPlayer].tiles[i]);
+  }
+  G.players[currentPlayer].tiles = playerTiles;
+
+  // draw
+  shuffle(G.tileBag);
+  for (let i = 0; i < G.players[currentPlayer].tiles.length; i++) {
+    giveTileToPlayer(G, currentPlayer);
+  }
+}
+
+// Assumes tileBag is shuffled
+function giveTileToPlayer(state: TigrisEuphratesState, playerId: string) {
+  if (state.tileBag.length < 1) return;
+  if (state.players[playerId] === undefined) return;
+
+  const tile = state.tileBag.pop();
+  state.players[playerId]!.tiles.push(tile!);
+}
 
 // TODO: validate move in UI
 // - does not join three or more kingdoms
