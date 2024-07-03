@@ -1,8 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
-import { placeCivilizationTile, swapTiles } from "./moves";
-import { initialGameState } from "./init";
+import {
+  placeCatastropheTile,
+  placeCivilizationTile,
+  swapTiles,
+} from "./moves";
+import { initialGameState, setup } from "./init";
 import { FARM, MARKET, SETTLEMENT } from "./constants";
-import { CivilizationTile, Dynasty, Kingdom } from "./types";
+import { CatastropheTile, CivilizationTile, Dynasty, Kingdom } from "./types";
 
 describe("swapTiles", () => {
   it("ends the game when the tile bag is empty", () => {
@@ -199,5 +203,114 @@ describe("placeCivilizationTile", () => {
         return current + totalPoints;
       }, 0),
     ).toEqual(0);
+  });
+});
+
+describe("placeCatastropheTile", () => {
+  it("does not throw an error", () => {
+    const G = initialGameState(3);
+    const shuffle = vi.fn();
+    setup({ initialState: G, shuffle });
+
+    placeCatastropheTile({
+      G,
+      toSpace: [0, 4],
+      currentPlayer: "0",
+      tileIndex: 0,
+    });
+  });
+
+  it("updates the board with the catastrophe at the target space", () => {
+    const G = initialGameState(3);
+    const catastrophe: CatastropheTile = {
+      facedown: false,
+      river: false,
+      catastrophe: true,
+    };
+    setup({ initialState: G, shuffle: vi.fn() });
+
+    placeCatastropheTile({
+      G,
+      toSpace: [0, 4],
+      currentPlayer: "0",
+      tileIndex: 0,
+    });
+
+    expect(G.spaces[0][4].tile).toMatchObject(catastrophe);
+  });
+
+  it("can separate two kingdoms", () => {
+    const G = initialGameState(3);
+    const kingdoms: Kingdom[] = [
+      { id: "one", spaces: ["0,0", "0,1", "0,2", "0,3", "0,4"] },
+    ];
+    G.kingdoms = kingdoms;
+    setup({ initialState: G, shuffle: vi.fn() });
+
+    expect(G.kingdoms).toHaveLength(1);
+    placeCatastropheTile({
+      G,
+      toSpace: [0, 2],
+      currentPlayer: "0",
+      tileIndex: 0,
+    });
+    expect(G.kingdoms).toHaveLength(2);
+    const spacesOfKingdoms = G.kingdoms.map(({ spaces }) => spaces);
+    expect(spacesOfKingdoms).toMatchObject([
+      ["0,0", "0,1"],
+      ["0,3", "0,4"],
+    ]);
+  });
+
+  it("can separate three kingdoms", () => {
+    const G = initialGameState(3);
+    const kingdoms: Kingdom[] = [
+      { id: "one", spaces: ["2,0", "2,1", "2,2", "2,3", "2,4", "1,2", "0,2"] },
+    ];
+    G.kingdoms = kingdoms;
+    setup({ initialState: G, shuffle: vi.fn() });
+
+    expect(G.kingdoms).toHaveLength(1);
+    placeCatastropheTile({
+      G,
+      toSpace: [2, 2],
+      currentPlayer: "0",
+      tileIndex: 0,
+    });
+    expect(G.kingdoms).toHaveLength(3);
+    const spacesOfKingdoms = G.kingdoms.map(({ spaces }) => spaces);
+    expect(spacesOfKingdoms).toMatchObject([
+      ["2,0", "2,1"],
+      ["2,3", "2,4"],
+      ["1,2", "0,2"],
+    ]);
+  });
+
+  it("can separate four kingdoms", () => {
+    const G = initialGameState(3);
+    const kingdoms: Kingdom[] = [
+      {
+        id: "one",
+        spaces: ["2,0", "2,1", "2,2", "2,3", "2,4", "1,2", "0,2", "3,2", "4,2"],
+      },
+    ];
+    G.kingdoms = kingdoms;
+    setup({ initialState: G, shuffle: vi.fn() });
+
+    expect(G.kingdoms).toHaveLength(1);
+    placeCatastropheTile({
+      G,
+      toSpace: [2, 2],
+      currentPlayer: "0",
+      tileIndex: 0,
+    });
+    expect(G.kingdoms).toHaveLength(4);
+    const spacesOfKingdoms = G.kingdoms.map(({ spaces }) => spaces);
+    expect(spacesOfKingdoms).toMatchObject([
+      ["2,0", "2,1"],
+      ["2,3", "2,4"],
+      ["1,2", "0,2"],
+      ["3,2", "4,2"],
+    ]);
   });
 });

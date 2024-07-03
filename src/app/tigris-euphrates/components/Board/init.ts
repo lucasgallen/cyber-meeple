@@ -3,14 +3,17 @@ import {
   FARM_TILE_COUNT,
   MARKET,
   MARKET_TILE_COUNT,
+  PLAYER_TILE_CAPACITY,
   SETTLEMENT,
   SETTLEMENT_TILE_COUNT,
   TEMPLE,
   TEMPLE_TILE_COUNT,
   TEMPLE_TREASURE_SPACES,
 } from "./constants";
+import { giveTileToPlayer } from "./helpers";
 import { initialSpaces } from "./space";
 import {
+  CatastropheTile,
   Dynasty,
   Leader,
   Monument,
@@ -91,4 +94,30 @@ export function initialGameState(playerCount: number): TigrisEuphratesState {
     },
     remainingMonuments: monuments,
   };
+}
+
+export function setup({
+  initialState,
+  shuffle,
+}: {
+  initialState: TigrisEuphratesState;
+  shuffle: <T>(deck: T[]) => T[];
+}) {
+  const playerKeys = Object.keys(initialState.players);
+  playerKeys.forEach((id) => {
+    const catastropheTiles: CatastropheTile[] = [
+      { catastrophe: true, river: false, facedown: false },
+      { catastrophe: true, river: false, facedown: false },
+    ];
+    initialState.players[id].tiles = [
+      ...initialState.players[id].tiles,
+      ...catastropheTiles,
+    ];
+    shuffle(initialState.tileBag);
+    for (let tileCount = 0; tileCount < PLAYER_TILE_CAPACITY - 2; tileCount++) {
+      giveTileToPlayer(initialState, id);
+    }
+  });
+
+  return initialState;
 }

@@ -21,10 +21,9 @@ import {
   getSpaceId,
   isSpaceEmpty,
 } from "./space";
-import { getSpacesFromKingdom } from "./kingdom";
+import { getSpacesFromKingdom, makeNewKingdoms } from "./kingdom";
 import { EventsAPI } from "boardgame.io/dist/types/src/plugins/plugin-events";
 import { SETTLEMENT } from "./constants";
-import { Events } from "boardgame.io/dist/types/src/plugins/events/events";
 
 export function swapTiles({
   G,
@@ -64,6 +63,48 @@ function giveTileToPlayer(state: TigrisEuphratesState, playerId: string) {
 
   const tile = state.tileBag.pop();
   state.players[playerId]!.tiles.push(tile!);
+}
+
+// place catastrophe tile on any empty space that does not have treasure or a monument
+// If this leaves a leader no longer next to a red temple, move the leader off the board.
+export function placeCatastropheTile({
+  G,
+  toSpace,
+  currentPlayer,
+  tileIndex,
+}: {
+  G: TigrisEuphratesState;
+  toSpace: [number, number];
+  currentPlayer: string;
+  tileIndex: number;
+}) {
+  const player: PlayerState = G.players[currentPlayer];
+  const catastropheTile = player.tiles[tileIndex];
+  player.tiles = [
+    ...player.tiles.slice(0, tileIndex),
+    ...player.tiles.slice(tileIndex + 1),
+  ];
+  G.spaces[toSpace[0]][toSpace[1]].tile = catastropheTile;
+  const toSpaceId = G.spaces[toSpace[0]][toSpace[1]].id;
+  const targetKingdom = getKingdomFromSpace(toSpaceId, G.kingdoms);
+  if (targetKingdom === undefined) return;
+
+  const spaceKingdomIndex = targetKingdom.spaces.findIndex(
+    (spaceId) => spaceId === toSpaceId,
+  );
+  targetKingdom.spaces = [
+    ...targetKingdom.spaces.slice(0, spaceKingdomIndex),
+    ...targetKingdom.spaces.slice(spaceKingdomIndex + 1),
+  ];
+  const targetKingdomIndex = G.kingdoms.findIndex(
+    ({ id }) => id === targetKingdom.id,
+  );
+  const newKingdoms = makeNewKingdoms(targetKingdom);
+  G.kingdoms = [
+    ...G.kingdoms.slice(0, targetKingdomIndex),
+    ...newKingdoms,
+    ...G.kingdoms.slice(targetKingdomIndex + 1),
+  ];
 }
 
 // TODO: validate move in UI

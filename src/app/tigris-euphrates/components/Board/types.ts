@@ -40,7 +40,7 @@ interface TileInterface {
   river: boolean;
 }
 
-interface CatastropheTile extends TileInterface {
+export interface CatastropheTile extends TileInterface {
   catastrophe: true;
   facedown: false;
 }
@@ -160,6 +160,16 @@ export function isLeader(leader: unknown): leader is Leader {
   const hasCivType = (leader as Leader).civType !== undefined;
 
   return hasDynasty && hasCivType;
+}
+
+export function isTile(tile: unknown): tile is Tile {
+  if (tile === undefined) return false;
+  if (tile === null) return false;
+
+  if ((tile as Tile).facedown === undefined) return false;
+  if ((tile as Tile).river === undefined) return false;
+
+  return true;
 }
 
 export function isCivilizationTile(

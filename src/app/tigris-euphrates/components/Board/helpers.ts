@@ -1,4 +1,4 @@
-import { TigrisEuphratesState } from "./types";
+import { TigrisEuphratesState, isTile } from "./types";
 
 export function updateKingdoms() {
   // define the current set of kingdoms
@@ -26,6 +26,7 @@ export function buildMonument() {
 }
 
 // Assumes tileBag is shuffled
+// Gives player tile from the bag
 export function giveTileToPlayer(
   state: TigrisEuphratesState,
   playerId: string,
@@ -33,15 +34,6 @@ export function giveTileToPlayer(
   if (state.tileBag.length < 1) return;
   if (state.players[playerId] === undefined) return;
 
-  /*
-  const randomIndex = Math.floor(Math.random() * state.tileBag.length);
-  const tile = state.tileBag[randomIndex];
-  state.tileBag = [
-    ...state.tileBag.slice(0, randomIndex),
-    ...state.tileBag.slice(randomIndex + 1, state.tileBag.length - 1),
-  ];
-  */
-
   const tile = state.tileBag.pop();
-  state.players[playerId]!.tiles.push(tile!);
+  isTile(tile) && state.players[playerId].tiles.push(tile);
 }

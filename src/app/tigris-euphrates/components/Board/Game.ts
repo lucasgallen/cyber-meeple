@@ -1,17 +1,13 @@
 import type { Game } from "boardgame.io";
 import { TurnOrder } from "boardgame.io/core";
-import { initialGameState } from "./init";
+import { initialGameState, setup } from "./init";
 
 import { CivilizationTile, TigrisEuphratesState, Tile } from "./types";
-import {
-  COLUMN_SPACE_COUNT,
-  PLAYER_TILE_CAPACITY,
-  ROW_SPACE_COUNT,
-} from "./constants";
-import { giveTileToPlayer } from "./helpers";
+import { COLUMN_SPACE_COUNT, ROW_SPACE_COUNT } from "./constants";
 import {
   formMonument,
   moveLeader,
+  placeCatastropheTile,
   placeCivilizationTile,
   swapTiles,
 } from "./moves";
@@ -26,19 +22,11 @@ export const TigrisEuphrates: Game<TigrisEuphratesState> = {
   // Function that returns the initial value of G.
   // setupData is an optional custom object that is
   // passed through the Game Creation API.
-  setup: ({ ctx, random }) => {
-    const players = ["0", "1", "2", "3"] as const;
-    let initialState = initialGameState(ctx.numPlayers);
-
-    players.forEach((id) => {
-      random.Shuffle(initialState.tileBag);
-      for (let tileCount = 0; tileCount < PLAYER_TILE_CAPACITY; tileCount++) {
-        giveTileToPlayer(initialState, id);
-      }
-    });
-
-    return initialState;
-  },
+  setup: ({ ctx, random }) =>
+    setup({
+      initialState: initialGameState(ctx.numPlayers),
+      shuffle: random.Shuffle,
+    }),
 
   moves: {
     MoveLeader: moveLeader,
@@ -55,9 +43,17 @@ export const TigrisEuphrates: Game<TigrisEuphratesState> = {
       }),
     FormMonument: formMonument,
 
-    PlaceCatastropheTile: () => {
-      // place catastrophe tile on any empty space that does not have treasure or a monument
-      // If this leaves a leader no longer next to a red temple, move the leader off the board.
+    PlaceCatastropheTile: (
+      { G, events, ctx },
+      toSpace: [number, number],
+      tileIndex: number,
+    ) => {
+      placeCatastropheTile({
+        G,
+        toSpace,
+        currentPlayer: ctx.currentPlayer,
+        tileIndex,
+      });
     },
 
     // discard up to six tiles from player's supply and give player that many new tiles
@@ -121,7 +117,7 @@ export const TigrisEuphrates: Game<TigrisEuphratesState> = {
 
   // Ends the game if this returns anything.
   // The return value is available in `ctx.gameover`.
-  endIf: ({ G, ctx }) => {
+  endIf: ({ G }) => {
     // if a player tries to draw a tile, and the tile bag is empty, then the game ends
     let treasureCount = 0;
     for (let i = 0; i < COLUMN_SPACE_COUNT; i++) {
