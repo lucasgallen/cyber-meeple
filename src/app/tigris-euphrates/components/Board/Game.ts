@@ -2,7 +2,7 @@ import type { Game } from "boardgame.io";
 import { TurnOrder } from "boardgame.io/core";
 import { initialGameState, setup } from "./init";
 
-import { CivilizationTile, TigrisEuphratesState } from "./types";
+import { CivilizationTile, Monument, TigrisEuphratesState } from "./types";
 import {
   formMonument,
   moveLeader,
@@ -31,6 +31,7 @@ export const TigrisEuphrates: Game<TigrisEuphratesState> = {
 
   moves: {
     MoveLeader: moveLeader,
+
     PlaceCivilizationTile: (
       { G, events },
       tile: CivilizationTile,
@@ -43,10 +44,14 @@ export const TigrisEuphrates: Game<TigrisEuphratesState> = {
         toSpace,
       }),
 
-    FormMonument: formMonument,
+    FormMonument: (
+      { G },
+      spaceCoords: [SpaceCoord, SpaceCoord, SpaceCoord, SpaceCoord],
+      monument: Monument,
+    ) => formMonument({ G, spaceCoords, monument }),
 
     PlaceCatastropheTile: (
-      { G, events, ctx },
+      { G, ctx },
       toSpace: SpaceCoord,
       tileIndex: number,
     ) => {

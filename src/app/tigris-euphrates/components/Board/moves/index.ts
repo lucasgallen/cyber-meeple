@@ -20,7 +20,7 @@ import {
 import { getSpacesFromKingdom, makeNewKingdoms } from "@teboard/kingdom";
 import { EventsAPI } from "boardgame.io/dist/types/src/plugins/plugin-events";
 import { SETTLEMENT } from "@teboard/constants";
-import { Space, SpaceCoord, SpaceId } from "@teboard/space/types";
+import { Space, SpaceCoord, SpaceId, isSpace } from "@teboard/space/types";
 import { Kingdom, isKingdom } from "@teboard/kingdom/types";
 
 export function swapTiles({
@@ -144,14 +144,23 @@ export function placeCivilizationTile({
   giveVictoryPointForLeader(kingdom, tile, G);
 }
 
-export function formMonument(
-  _: Record<string, unknown> & DefaultPluginAPIs & { ctx: Ctx },
-  spaces: [Space, Space, Space, Space],
-  monument: Monument,
-) {
+export function formMonument({
+  G,
+  spaceCoords,
+  monument,
+}: {
+  G: TigrisEuphratesState;
+  spaceCoords: [SpaceCoord, SpaceCoord, SpaceCoord, SpaceCoord];
+  monument: Monument;
+}) {
   // if the tile forms a square of four like-colored tiles, the player may form a monument
+  const spaces = spaceCoords
+    .map((coord) => G.spaces[coord[0]][coord[1]])
+    .filter(isSpace);
+
   spaces.forEach((space) => {
     space.monument = monument;
+    if (space.tile !== null) space.tile.facedown = true;
   });
 }
 

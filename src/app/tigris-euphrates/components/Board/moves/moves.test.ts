@@ -1,9 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
-import { placeCatastropheTile, placeCivilizationTile, swapTiles } from ".";
+import {
+  formMonument,
+  placeCatastropheTile,
+  placeCivilizationTile,
+  swapTiles,
+} from ".";
 import { initialGameState, setup } from "@teboard/init/";
 import { FARM, MARKET, SETTLEMENT } from "@teboard/constants";
-import { CatastropheTile, CivilizationTile, Dynasty } from "@teboard/types";
+import {
+  CatastropheTile,
+  CivilizationTile,
+  Dynasty,
+  Monument,
+} from "@teboard/types";
 import { Kingdom } from "@teboard/kingdom/types";
+import { SpaceCoord, isSpace } from "@teboard/space/types";
 
 describe("swapTiles", () => {
   it("ends the game when the tile bag is empty", () => {
@@ -129,6 +140,7 @@ describe("placeCivilizationTile", () => {
   it("awards points to the player of the leader matching the tile's civilization", () => {
     const G = initialGameState(3);
     const kingdoms: Kingdom[] = [{ id: "two", spaces: ["0,4", "0,5", "0,6"] }];
+    const bullPlayer = G.players["1"];
     G.kingdoms = kingdoms;
     G.spaces[0][5].leader = { dynasty: Dynasty.BULL, civType: FARM };
 
@@ -143,10 +155,11 @@ describe("placeCivilizationTile", () => {
       number,
     ];
 
-    expect(G.players["1"].points.farm).toEqual(0);
+    expect(bullPlayer.dynasty).toEqual(Dynasty.BULL);
+    expect(bullPlayer.points.farm).toEqual(0);
     placeCivilizationTile({ G, setActivePlayers, tile, toSpace });
 
-    expect(G.players["1"].points.farm).toEqual(1);
+    expect(bullPlayer.points.farm).toEqual(1);
   });
 
   it("awards points to the player of the leader of the settlement", () => {
@@ -200,6 +213,54 @@ describe("placeCivilizationTile", () => {
         return current + totalPoints;
       }, 0),
     ).toEqual(0);
+  });
+});
+
+describe("formMonument", () => {
+  it("turns a grid of four tiles into a monument", () => {
+    const G = initialGameState(3);
+    const spaceCoords: [SpaceCoord, SpaceCoord, SpaceCoord, SpaceCoord] = [
+      [3, 3],
+      [4, 3],
+      [4, 2],
+      [3, 2],
+    ];
+    const spaces = spaceCoords
+      .map((coord) => G.spaces[coord[0]][coord[1]])
+      .filter(isSpace);
+    const monument = Monument.RED_BLUE;
+
+    formMonument({ G, spaceCoords, monument });
+
+    const monuments = spaces.map(({ monument }) => monument);
+    monuments.forEach((mon) => expect(mon).toEqual(monument));
+  });
+
+  it("turns a grid of four tiles facedown", () => {
+    const G = initialGameState(3);
+    const spaceCoords: [SpaceCoord, SpaceCoord, SpaceCoord, SpaceCoord] = [
+      [3, 3],
+      [4, 3],
+      [4, 2],
+      [3, 2],
+    ];
+    const spaces = spaceCoords
+      .map((coord) => G.spaces[coord[0]][coord[1]])
+      .filter(isSpace);
+    const monument = Monument.RED_BLUE;
+    spaces.forEach((space) => {
+      const tile: CivilizationTile = {
+        river: false,
+        facedown: false,
+        civType: FARM,
+      };
+
+      space.tile = tile;
+    });
+
+    formMonument({ G, spaceCoords, monument });
+
+    spaces.forEach(({ tile }) => expect(tile.facedown).toBe(true));
   });
 });
 

@@ -8,7 +8,7 @@ export type Kingdom = {
 export function isKingdom(kingdom: unknown): kingdom is Kingdom {
   if (kingdom === undefined) return false;
   const hasId = typeof (kingdom as Kingdom).id === "string";
-  const hasSpaces = isSpaces((kingdom as Kingdom).spaces);
+  const hasSpaces = (kingdom as Kingdom).spaces !== undefined;
 
   return hasId && hasSpaces;
 }
