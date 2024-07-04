@@ -1,18 +1,20 @@
+import { makeNewKingdoms } from "./kingdom";
+import { Kingdom } from "./kingdom/types";
 import { TigrisEuphratesState, isTile } from "./types";
 
-export function updateKingdoms() {
-  // define the current set of kingdoms
-  //
-  // Each kingdom has unique set of spaces (id'd by their indices)
-  // when a space is changed we can check its adjacent spaces:
-  //   - how many adjacent spaces are empty?
-  //      - if all are empty, start new kingdom
-  //      - if only one is non-empty, add current space to the adjacent space's kingdom
-  //      - if more than one is non-empty, merge the three kingdoms into one
-  //
-  // OR
-  //
-  // Loop through all spaces and recreate set of kingdoms
+export function updatedKingdoms({
+  dirtyKingdom,
+  kingdoms,
+}: {
+  dirtyKingdom: Kingdom;
+  kingdoms: Kingdom[];
+}): Kingdom[] {
+  const dirtyIndex = kingdoms.findIndex(({ id }) => id === dirtyKingdom.id);
+  return [
+    ...kingdoms.slice(0, dirtyIndex),
+    ...makeNewKingdoms(dirtyKingdom),
+    ...kingdoms.slice(dirtyIndex + 1),
+  ];
 }
 
 export function buildMonument() {

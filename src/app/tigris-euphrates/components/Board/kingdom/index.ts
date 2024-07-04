@@ -10,6 +10,15 @@ import {
   isSpace,
 } from "@/app/tigris-euphrates/components/Board/space/types";
 
+export function removeSpaceFromKingdom(kingdom: Kingdom, space: SpaceId) {
+  const spaceIndex = kingdom.spaces.findIndex((id) => id === space);
+  const spaces = [
+    ...kingdom.spaces.slice(0, spaceIndex),
+    ...kingdom.spaces.slice(spaceIndex + 1),
+  ];
+  kingdom.spaces = spaces;
+}
+
 export function getSpacesFromKingdom(
   kingdom: Kingdom,
   rows: readonly Row[],

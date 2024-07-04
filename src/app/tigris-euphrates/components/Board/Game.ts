@@ -2,10 +2,17 @@ import type { Game } from "boardgame.io";
 import { TurnOrder } from "boardgame.io/core";
 import { initialGameState, setup } from "./init";
 
-import { CivilizationTile, Monument, TigrisEuphratesState } from "./types";
+import {
+  CivilizationTile,
+  Leader,
+  Monument,
+  TigrisEuphratesState,
+} from "./types";
 import {
   formMonument,
-  moveLeader,
+  moveLeaderFromHand,
+  moveLeaderOnBoard,
+  moveLeaderToHand,
   placeCatastropheTile,
   placeCivilizationTile,
   swapTiles,
@@ -30,7 +37,31 @@ export const TigrisEuphrates: Game<TigrisEuphratesState> = {
     }),
 
   moves: {
-    MoveLeader: moveLeader,
+    MoveLeaderToHand: ({ G, ctx }, fromSpace: SpaceCoord) =>
+      moveLeaderToHand({ G, fromSpace, currentPlayer: ctx.currentPlayer }),
+    MoveLeaderFromHand: (
+      { G, events, ctx },
+      leader: Leader,
+      toSpace: SpaceCoord,
+    ) =>
+      moveLeaderFromHand({
+        G,
+        toSpace,
+        leader,
+        currentPlayer: ctx.currentPlayer,
+        setActivePlayers: events.setActivePlayers,
+      }),
+    MoveLeaderOnBoard: (
+      { G, events },
+      leader: Leader,
+      space: { from: SpaceCoord; to: SpaceCoord },
+    ) =>
+      moveLeaderOnBoard({
+        G,
+        space,
+        leader,
+        setActivePlayers: events.setActivePlayers,
+      }),
 
     PlaceCivilizationTile: (
       { G, events },

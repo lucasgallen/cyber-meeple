@@ -1,10 +1,25 @@
 import { describe, expect, it } from "vitest";
 import { Space, SpaceId } from "@teboard/space/types";
-import { getSpacesFromKingdom, makeNewKingdoms } from ".";
+import {
+  getSpacesFromKingdom,
+  makeNewKingdoms,
+  removeSpaceFromKingdom,
+} from ".";
 import { initialGameState } from "@teboard/init";
 import { FARM } from "@teboard/constants";
 import { Kingdom } from "./types";
 import { Dynasty, Leader } from "@teboard/types";
+
+describe("removeSpaceFromKingdom", () => {
+  it("removes the given space from the kingdom", () => {
+    const kingdom: Kingdom = { id: "foo", spaces: ["0,0", "1,0", "1,1"] };
+    const spaceId: SpaceId = "1,1";
+    expect(kingdom.spaces).toHaveLength(3);
+    removeSpaceFromKingdom(kingdom, spaceId);
+    expect(kingdom.spaces).toHaveLength(2);
+    expect(kingdom.spaces).not.toContain(spaceId);
+  });
+});
 
 describe("getSpacesFromKingdom", () => {
   it("returns the correct spaces", () => {

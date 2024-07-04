@@ -16,6 +16,22 @@ import {
 import { Kingdom } from "@teboard/kingdom/types";
 import { SpaceCoord, isSpace } from "@teboard/space/types";
 
+describe("moveLeaderOnBoard", () => {
+  it("stays on the board");
+
+  // move leader from hand
+  it("does not cause conflict when opposing leader does not exist");
+  it("does not cause conflict when it creates a new kingdom");
+  it("causes conflict when there is an opposing leader");
+  it("is added to a kingdom if it already exists");
+  it("it creates a new kingdom");
+
+  // move leader to hand
+  it("creates two kingdoms when separating tiles");
+  it("creates three kingdoms when separating tiles");
+  it("creates four kingdoms when separating tiles");
+});
+
 describe("swapTiles", () => {
   it("ends the game when the tile bag is empty", () => {
     const G = initialGameState(3);

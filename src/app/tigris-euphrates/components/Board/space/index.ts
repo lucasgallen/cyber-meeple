@@ -1,17 +1,18 @@
+import { TEMPLE } from "@teboard/constants";
+import { Kingdom } from "@teboard/kingdom/types";
+import { isCivilizationTile } from "@teboard/types";
 import {
   COLUMN_SPACE_COUNT,
   RIVER_SPACES,
   ROW_SPACE_COUNT,
-  TEMPLE,
   TEMPLE_TREASURE_SPACES,
 } from "./constants";
 import {
-  Kingdom,
   Row,
   Space,
+  SpaceCoord,
   SpaceId,
   Spaces,
-  isCivilizationTile,
   isSpace,
   isSpaces,
 } from "./types";
@@ -155,7 +156,10 @@ export function canSpaceFormMonument(
   return potentialMonumentSpaces;
 }
 
-export function getKingdomFromSpace(id: SpaceId, kingdoms: Kingdom[]) {
+export function getKingdomFromSpace(
+  id: SpaceId,
+  kingdoms: Kingdom[],
+): Kingdom | undefined {
   return kingdoms.find(({ spaces }) => {
     return spaces.includes(id);
   });

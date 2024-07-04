@@ -1,4 +1,4 @@
-import { ActivePlayersArg, Ctx, DefaultPluginAPIs } from "boardgame.io";
+import { ActivePlayersArg } from "boardgame.io";
 import { v4 as uuidv4 } from "uuid";
 import {
   CivType,
@@ -17,11 +17,15 @@ import {
   getSpaceId,
   isSpaceEmpty,
 } from "@teboard/space";
-import { getSpacesFromKingdom, makeNewKingdoms } from "@teboard/kingdom";
-import { EventsAPI } from "boardgame.io/dist/types/src/plugins/plugin-events";
+import {
+  getSpacesFromKingdom,
+  makeNewKingdoms,
+  removeSpaceFromKingdom,
+} from "@teboard/kingdom";
 import { SETTLEMENT } from "@teboard/constants";
 import { Space, SpaceCoord, SpaceId, isSpace } from "@teboard/space/types";
 import { Kingdom, isKingdom } from "@teboard/kingdom/types";
+import { updatedKingdoms } from "../helpers";
 
 export function swapTiles({
   G,
@@ -206,53 +210,140 @@ function giveVictoryPointForLeader(
   // else no points given
 }
 
-// TODO: assumes the placement is legal -- UI needs to validate the move
-export function moveLeader(
-  {
-    G,
-    events,
-  }: Record<string, unknown> &
-    DefaultPluginAPIs & { ctx: Ctx; G: TigrisEuphratesState },
-  leader: Leader,
-  space: { from?: SpaceCoord; to: SpaceCoord },
-) {
-  // select leader from the board or from supply
-  // place leader into any empty, non-river space that does not join two kingdoms
-  // a leader cannot separate two kingdoms and then join the same two kingdoms
+export function moveLeaderToHand({
+  G,
+  fromSpace,
+  currentPlayer,
+}: {
+  G: TigrisEuphratesState;
+  fromSpace: SpaceCoord;
+  currentPlayer: string;
+}) {
+  const player = G.players[currentPlayer];
+  const boardSpace = getSpace(fromSpace, G.spaces);
+  const leader = boardSpace.leader;
+  const kingdom = getKingdomFromSpace(boardSpace.id, G.kingdoms);
 
-  const leaderCiv = leader.civType;
-  const toSpace = getSpace(space.to, G.spaces);
-  const adjacentSpaces = getAdjacentSpaces(space.to, G.spaces);
-  let spaceWithKingdom: SpaceId | undefined;
+  boardSpace.leader = null;
+  player.leaders.push(leader);
 
-  // if space.from is defined, remove leader
-  if (space.from !== undefined) {
-    getSpace(space.from, G.spaces).leader = null;
+  if (isKingdom(kingdom)) {
+    removeSpaceFromKingdom(kingdom, boardSpace.id);
+    G.kingdoms = updatedKingdoms({
+      dirtyKingdom: kingdom,
+      kingdoms: G.kingdoms,
+    });
   }
+}
 
-  // place leader on space.to
-  toSpace.leader = leader;
+export function moveLeaderFromHand({
+  G,
+  toSpace,
+  leader,
+  currentPlayer,
+  setActivePlayers,
+}: {
+  G: TigrisEuphratesState;
+  toSpace: SpaceCoord;
+  leader: Leader;
+  currentPlayer: string;
+  setActivePlayers: (arg: ActivePlayersArg) => void;
+}) {
+  const player = G.players[currentPlayer];
+  const adjacentSpaces = getAdjacentSpaces(toSpace, G.spaces);
+  const boardSpace = getSpace(toSpace, G.spaces);
+  let spaceIdWithKingdom = "";
+  boardSpace.leader = leader;
 
-  // search adjacent spaces for a kingdom (there can only be one)
-  //  TODO: UI must guarentee this is valid
+  if (!isLeader(leader)) return;
+
+  const leaderIndex = player.leaders.findIndex(
+    ({ civType }) => civType === leader.civType,
+  );
+  player.leaders = [
+    ...player.leaders.slice(0, leaderIndex),
+    ...player.leaders.slice(leaderIndex + 1),
+  ];
+
   const adjacentKingdom = adjacentSpaces
     .map(({ id }) => {
       const kingdom = getKingdomFromSpace(id, G.kingdoms);
-      if (kingdom !== undefined) spaceWithKingdom = id;
+      if (kingdom !== undefined) spaceIdWithKingdom = id;
 
       return kingdom;
     })
     .find(isKingdom);
 
-  // check adjacent spaces for red temple and other tiles
   const adjacentNonEmptySpaces = adjacentSpaces.filter((space) => {
     const isNonEmpty = !isSpaceEmpty(space);
-    const isNotInKingdom = space.id !== spaceWithKingdom;
+    const isNotInKingdom = space.id !== spaceIdWithKingdom;
     return isNonEmpty && isNotInKingdom;
   });
 
-  // create a new kingdom with other adjcent tiles
-  if (adjacentKingdom === undefined) {
+  if (adjacentKingdom !== undefined) {
+    triggerAttackLeader(adjacentKingdom, leader.civType, setActivePlayers, G);
+    return;
+  }
+
+  G.kingdoms.push({
+    id: uuidv4(),
+    spaces: [
+      getSpaceId(toSpace),
+      ...adjacentNonEmptySpaces.map(({ id }) => id),
+    ],
+  });
+}
+
+export function moveLeaderOnBoard({
+  G,
+  space,
+  leader,
+  setActivePlayers,
+}: {
+  G: TigrisEuphratesState;
+  space: { from: SpaceCoord; to: SpaceCoord };
+  leader: Leader;
+  setActivePlayers: (arg: ActivePlayersArg) => void;
+}) {
+  const adjacentSpaces = getAdjacentSpaces(space.to, G.spaces);
+  const boardSpaceTo = getSpace(space.to, G.spaces);
+  const boardSpaceFrom = getSpace(space.from, G.spaces);
+  let spaceIdWithKingdom = "";
+  boardSpaceTo.leader = leader;
+
+  if (!isLeader(leader)) return;
+
+  const kingdom = getKingdomFromSpace(boardSpaceFrom.id, G.kingdoms);
+
+  if (isKingdom(kingdom)) {
+    removeSpaceFromKingdom(kingdom, boardSpaceFrom.id);
+    G.kingdoms = updatedKingdoms({
+      dirtyKingdom: kingdom,
+      kingdoms: G.kingdoms,
+    });
+  }
+
+  const adjacentKingdom = adjacentSpaces
+    .map(({ id }) => {
+      const kingdom = getKingdomFromSpace(id, G.kingdoms);
+      if (kingdom !== undefined) spaceIdWithKingdom = id;
+
+      return kingdom;
+    })
+    .find(isKingdom);
+
+  const adjacentNonEmptySpaces = adjacentSpaces.filter((space) => {
+    const isNonEmpty = !isSpaceEmpty(space);
+    const isNotInKingdom = space.id !== spaceIdWithKingdom;
+    return isNonEmpty && isNotInKingdom;
+  });
+
+  if (adjacentKingdom !== undefined) {
+    triggerAttackLeader(adjacentKingdom, leader.civType, setActivePlayers, G);
+    return;
+  }
+
+  if (adjacentNonEmptySpaces.length > 0) {
     G.kingdoms.push({
       id: uuidv4(),
       spaces: [
@@ -260,22 +351,13 @@ export function moveLeader(
         ...adjacentNonEmptySpaces.map(({ id }) => id),
       ],
     });
-    // if they aren't in the same kingdom, then add them along with the leader to the kingdom
-  } else {
-    adjacentKingdom.spaces = [
-      getSpaceId(space.to),
-      ...adjacentKingdom.spaces,
-      ...adjacentNonEmptySpaces.map(({ id }) => id),
-    ];
-
-    triggerAttackLeader(adjacentKingdom, leaderCiv, events, G);
   }
 }
 
 function triggerAttackLeader(
   kingdom: Kingdom,
   leaderCiv: CivType,
-  events: EventsAPI,
+  setActivePlayers: (arg: ActivePlayersArg) => void,
   G: TigrisEuphratesState,
 ) {
   // if leader was added to a kingdom, search that kingdom for a leader that has the same leaderCiv
@@ -284,18 +366,18 @@ function triggerAttackLeader(
     .map(({ leader }) => leader)
     .filter(isLeader)
     .find(({ civType }) => civType === leaderCiv)?.dynasty;
-  if (opposingDynasty !== undefined) {
-    let opposingPlayerId = "0";
-    Object.keys(G.players).forEach((key) => {
-      if (G.players[key].dynasty === opposingDynasty) {
-        opposingPlayerId = key;
-        return;
-      }
-    });
+  if (opposingDynasty === undefined) return;
 
-    events.setActivePlayers({
-      currentPlayer: "AttackLeader",
-      value: { [opposingPlayerId]: "AttackLeader" },
-    });
-  }
+  let opposingPlayerId = "";
+  Object.keys(G.players).forEach((key) => {
+    if (G.players[key].dynasty === opposingDynasty) {
+      opposingPlayerId = key;
+      return;
+    }
+  });
+
+  setActivePlayers({
+    currentPlayer: "AttackLeader",
+    value: { [opposingPlayerId]: "AttackLeader" },
+  });
 }
