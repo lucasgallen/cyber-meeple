@@ -8,6 +8,7 @@ import {
   Monument,
   PlayerState,
   Space,
+  SpaceCoord,
   SpaceId,
   TigrisEuphratesState,
   Tile,
@@ -74,7 +75,7 @@ export function placeCatastropheTile({
   tileIndex,
 }: {
   G: TigrisEuphratesState;
-  toSpace: [number, number];
+  toSpace: SpaceCoord;
   currentPlayer: string;
   tileIndex: number;
 }) {
@@ -119,7 +120,7 @@ export function placeCivilizationTile({
   G: TigrisEuphratesState;
   setActivePlayers: (arg: ActivePlayersArg) => void;
   tile: CivilizationTile;
-  toSpace: [number, number];
+  toSpace: SpaceCoord;
 }) {
   const boardSpace = getSpace(toSpace, G.spaces);
   boardSpace.tile = tile;
@@ -207,7 +208,7 @@ export function moveLeader(
   }: Record<string, unknown> &
     DefaultPluginAPIs & { ctx: Ctx; G: TigrisEuphratesState },
   leader: Leader,
-  space: { from?: [number, number]; to: [number, number] },
+  space: { from?: SpaceCoord; to: SpaceCoord },
 ) {
   // select leader from the board or from supply
   // place leader into any empty, non-river space that does not join two kingdoms

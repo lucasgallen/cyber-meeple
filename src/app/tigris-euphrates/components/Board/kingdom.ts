@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 
 import { getSpace, getSpaceId } from "./space";
-import { Kingdom, Row, Space, SpaceId, isSpace } from "./types";
+import { Kingdom, Row, Space, SpaceCoord, SpaceId, isSpace } from "./types";
 
 export function getSpacesFromKingdom(
   kingdom: Kingdom,
@@ -37,7 +37,7 @@ export function makeNewKingdoms(originalKingdom: Kingdom): Kingdom[] {
   function findUncheckedNeighbors(spaceId: SpaceId): SpaceId[] {
     if (uncheckedSpaces.length < 1) return [];
 
-    const space = spaceId.split(",").map((space) => +space) as [number, number];
+    const space = spaceId.split(",").map((space) => +space);
     const deltas = [1, -1];
     const uncheckedNeighborIds: SpaceId[] = [];
     const neighborIdsInKingdom: SpaceId[] = [spaceId];
@@ -49,13 +49,13 @@ export function makeNewKingdoms(originalKingdom: Kingdom): Kingdom[] {
     ];
 
     deltas.forEach((delta) => {
-      const neighbor: [number, number] = [space[0] + delta, space[1]];
+      const neighbor: SpaceCoord = [space[0] + delta, space[1]];
       const neighborString: SpaceId = getSpaceId(neighbor);
       if (uncheckedSpaces.includes(neighborString))
         uncheckedNeighborIds.push(neighborString);
     });
     deltas.forEach((delta) => {
-      const neighbor: [number, number] = [space[0], space[1] + delta];
+      const neighbor: SpaceCoord = [space[0], space[1] + delta];
       const neighborString: SpaceId = getSpaceId(neighbor);
       if (uncheckedSpaces.includes(neighborString))
         uncheckedNeighborIds.push(neighborString);

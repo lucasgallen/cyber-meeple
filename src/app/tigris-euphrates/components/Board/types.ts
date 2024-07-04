@@ -76,6 +76,7 @@ export type Kingdom = {
 };
 
 export type SpaceId = `${number},${number}`;
+export type SpaceCoord = [number, number];
 export type Space = {
   id: SpaceId;
   tile: Tile | null;
@@ -143,6 +144,12 @@ export function isSpace(space: unknown): space is Space {
   if (space === undefined) return false;
   const hasTile = (space as Space).tile !== undefined;
   return hasTile;
+}
+
+export function isSpaceCoord(coord: number[]): coord is SpaceCoord {
+  if (coord.length !== 2) return false;
+
+  return true;
 }
 
 export function isKingdom(kingdom: unknown): kingdom is Kingdom {

@@ -16,7 +16,7 @@ import {
   isSpaces,
 } from "./types";
 
-export function getSpaceId(coord: [number, number]): SpaceId {
+export function getSpaceId(coord: SpaceCoord): SpaceId {
   return `${coord[0]},${coord[1]}`;
 }
 
@@ -54,7 +54,7 @@ export function isSpaceEmpty(space: Space): boolean {
   return true;
 }
 
-export function getSpace(coord: [number, number], rows: readonly Row[]): Space {
+export function getSpace(coord: SpaceCoord, rows: readonly Row[]): Space {
   const id = `${coord[0]},${coord[1]}`;
   const spaces = rows.reduce(
     (current: Space[], row) => [...current, ...row],
@@ -70,7 +70,7 @@ export function getSpace(coord: [number, number], rows: readonly Row[]): Space {
 }
 
 export function getAdjacentSpaces(
-  coord: [number, number],
+  coord: SpaceCoord,
   spaces: readonly Row[],
 ): Space[] {
   const adjacentSpaces = [
@@ -79,7 +79,7 @@ export function getAdjacentSpaces(
     [-1, 0],
     [0, -1],
   ].map((displacement) => {
-    const displacedSpaceCoord: [number, number] = [
+    const displacedSpaceCoord: SpaceCoord = [
       coord[0] + displacement[0],
       coord[1] + displacement[1],
     ];
@@ -103,9 +103,9 @@ export function canSpaceFormMonument(
   if (!isCivilizationTile(space.tile)) return false;
   let potentialMonumentSpaces: [Space, Space, Space][] = [];
   const potentialMonumentCoordinateSets: readonly [
-    [number, number],
-    [number, number],
-    [number, number],
+    SpaceCoord,
+    SpaceCoord,
+    SpaceCoord,
   ][] = [
     [
       [0, 1],
@@ -131,12 +131,12 @@ export function canSpaceFormMonument(
   const civ = space.tile.civType;
   const spaceCoords = space.id
     .split(",")
-    .map((coordString) => +coordString) as [number, number];
+    .map((coordString) => +coordString) as SpaceCoord;
 
   potentialMonumentCoordinateSets.forEach((coordSet) => {
     let areSameCiv = true;
     const spacesSet = coordSet.map((coordDelta) => {
-      const newCoord: [number, number] = [
+      const newCoord: SpaceCoord = [
         coordDelta[0] + spaceCoords[0],
         coordDelta[1] + spaceCoords[1],
       ];

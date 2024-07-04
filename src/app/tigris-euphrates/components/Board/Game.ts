@@ -2,7 +2,7 @@ import type { Game } from "boardgame.io";
 import { TurnOrder } from "boardgame.io/core";
 import { initialGameState, setup } from "./init";
 
-import { CivilizationTile, TigrisEuphratesState, Tile } from "./types";
+import { CivilizationTile, SpaceCoord, TigrisEuphratesState } from "./types";
 import { COLUMN_SPACE_COUNT, ROW_SPACE_COUNT } from "./constants";
 import {
   formMonument,
@@ -33,7 +33,7 @@ export const TigrisEuphrates: Game<TigrisEuphratesState> = {
     PlaceCivilizationTile: (
       { G, events },
       tile: CivilizationTile,
-      toSpace: [number, number],
+      toSpace: SpaceCoord,
     ) =>
       placeCivilizationTile({
         G,
@@ -41,11 +41,12 @@ export const TigrisEuphrates: Game<TigrisEuphratesState> = {
         tile,
         toSpace,
       }),
+
     FormMonument: formMonument,
 
     PlaceCatastropheTile: (
       { G, events, ctx },
-      toSpace: [number, number],
+      toSpace: SpaceCoord,
       tileIndex: number,
     ) => {
       placeCatastropheTile({
