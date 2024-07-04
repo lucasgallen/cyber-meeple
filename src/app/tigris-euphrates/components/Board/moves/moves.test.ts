@@ -1,12 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  placeCatastropheTile,
-  placeCivilizationTile,
-  swapTiles,
-} from "./moves";
-import { initialGameState, setup } from "./init";
-import { FARM, MARKET, SETTLEMENT } from "./constants";
-import { CatastropheTile, CivilizationTile, Dynasty, Kingdom } from "./types";
+import { placeCatastropheTile, placeCivilizationTile, swapTiles } from ".";
+import { initialGameState, setup } from "@teboard/init/";
+import { FARM, MARKET, SETTLEMENT } from "@teboard/constants";
+import { CatastropheTile, CivilizationTile, Dynasty } from "@teboard/types";
+import { Kingdom } from "@teboard/kingdom/types";
 
 describe("swapTiles", () => {
   it("ends the game when the tile bag is empty", () => {

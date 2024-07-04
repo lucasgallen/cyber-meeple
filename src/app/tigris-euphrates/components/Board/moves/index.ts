@@ -3,28 +3,25 @@ import { v4 as uuidv4 } from "uuid";
 import {
   CivType,
   CivilizationTile,
-  Kingdom,
   Leader,
   Monument,
   PlayerState,
-  Space,
-  SpaceCoord,
-  SpaceId,
   TigrisEuphratesState,
   Tile,
-  isKingdom,
   isLeader,
-} from "./types";
+} from "@teboard/types";
 import {
   getAdjacentSpaces,
   getKingdomFromSpace,
   getSpace,
   getSpaceId,
   isSpaceEmpty,
-} from "./space";
-import { getSpacesFromKingdom, makeNewKingdoms } from "./kingdom";
+} from "@teboard/space";
+import { getSpacesFromKingdom, makeNewKingdoms } from "@teboard/kingdom";
 import { EventsAPI } from "boardgame.io/dist/types/src/plugins/plugin-events";
-import { SETTLEMENT } from "./constants";
+import { SETTLEMENT } from "@teboard/constants";
+import { Space, SpaceCoord, SpaceId } from "@teboard/space/types";
+import { Kingdom, isKingdom } from "@teboard/kingdom/types";
 
 export function swapTiles({
   G,
@@ -91,7 +88,7 @@ export function placeCatastropheTile({
   if (targetKingdom === undefined) return;
 
   const spaceKingdomIndex = targetKingdom.spaces.findIndex(
-    (spaceId) => spaceId === toSpaceId,
+    (spaceId: SpaceId) => spaceId === toSpaceId,
   );
   targetKingdom.spaces = [
     ...targetKingdom.spaces.slice(0, spaceKingdomIndex),

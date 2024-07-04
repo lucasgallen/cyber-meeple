@@ -2,8 +2,7 @@ import type { Game } from "boardgame.io";
 import { TurnOrder } from "boardgame.io/core";
 import { initialGameState, setup } from "./init";
 
-import { CivilizationTile, SpaceCoord, TigrisEuphratesState } from "./types";
-import { COLUMN_SPACE_COUNT, ROW_SPACE_COUNT } from "./constants";
+import { CivilizationTile, TigrisEuphratesState } from "./types";
 import {
   formMonument,
   moveLeader,
@@ -11,6 +10,8 @@ import {
   placeCivilizationTile,
   swapTiles,
 } from "./moves";
+import { SpaceCoord } from "./space/types";
+import { COLUMN_SPACE_COUNT, ROW_SPACE_COUNT } from "./space/constants";
 
 // Player Victory points:
 //  - Red, Blue, Green, Black, Treasure (wild)

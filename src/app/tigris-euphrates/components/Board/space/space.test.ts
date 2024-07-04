@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { initialSpaces } from "./space";
+import { initialSpaces } from ".";
 import { Space, Spaces } from "./types";
 import { RIVER_SPACES, TEMPLE_TREASURE_SPACES } from "./constants";
 

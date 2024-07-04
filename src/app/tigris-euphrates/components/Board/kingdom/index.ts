@@ -1,7 +1,14 @@
 import { v4 as uuidv4 } from "uuid";
 
-import { getSpace, getSpaceId } from "./space";
-import { Kingdom, Row, Space, SpaceCoord, SpaceId, isSpace } from "./types";
+import { getSpace, getSpaceId } from "../space";
+import { Kingdom } from "./types";
+import {
+  Row,
+  Space,
+  SpaceCoord,
+  SpaceId,
+  isSpace,
+} from "@/app/tigris-euphrates/components/Board/space/types";
 
 export function getSpacesFromKingdom(
   kingdom: Kingdom,

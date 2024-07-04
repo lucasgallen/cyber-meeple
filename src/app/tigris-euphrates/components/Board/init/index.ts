@@ -8,10 +8,10 @@ import {
   SETTLEMENT_TILE_COUNT,
   TEMPLE,
   TEMPLE_TILE_COUNT,
-  TEMPLE_TREASURE_SPACES,
-} from "./constants";
-import { giveTileToPlayer } from "./helpers";
-import { initialSpaces } from "./space";
+} from "@teboard/constants";
+import { giveTileToPlayer } from "@teboard/helpers";
+import { initialSpaces } from "@teboard/space";
+import { TEMPLE_TREASURE_SPACES } from "@teboard/space/constants";
 import {
   CatastropheTile,
   Dynasty,
@@ -20,7 +20,7 @@ import {
   PlayerState,
   TigrisEuphratesState,
   Tile,
-} from "./types";
+} from "@teboard/types";
 
 export function initialPlayerState(
   dynasty: Dynasty,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { initialGameState, initialPlayerState } from "./init";
-import { Dynasty } from "./types";
+import { initialGameState, initialPlayerState } from ".";
+import { Dynasty } from "../types";
 
 describe("init player", () => {
   it("does not throw an error", () => {

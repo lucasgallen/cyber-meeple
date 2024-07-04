@@ -1,12 +1,6 @@
-import { isArray } from "util";
-import {
-  COLUMN_SPACE_COUNT,
-  FARM,
-  MARKET,
-  ROW_SPACE_COUNT,
-  SETTLEMENT,
-  TEMPLE,
-} from "./constants";
+import { FARM, MARKET, SETTLEMENT, TEMPLE } from "./constants";
+import { Kingdom } from "./kingdom/types";
+import { Spaces } from "./space/types";
 
 // Players: Urn, Archer, Lion, Bull
 export enum Dynasty {
@@ -70,53 +64,6 @@ export type Leader = {
   dynasty: Dynasty;
   civType: CivType;
 };
-export type Kingdom = {
-  id: string;
-  spaces: SpaceId[];
-};
-
-export type SpaceId = `${number},${number}`;
-export type SpaceCoord = [number, number];
-export type Space = {
-  id: SpaceId;
-  tile: Tile | null;
-  river: boolean;
-  treasure: boolean;
-  monument: Monument | null;
-  leader: Leader | null;
-};
-
-// 16x11 square grid game board
-export type Row = readonly [
-  Space,
-  Space,
-  Space,
-  Space,
-  Space,
-  Space,
-  Space,
-  Space,
-  Space,
-  Space,
-  Space,
-  Space,
-  Space,
-  Space,
-  Space,
-];
-export type Spaces = readonly [
-  Row,
-  Row,
-  Row,
-  Row,
-  Row,
-  Row,
-  Row,
-  Row,
-  Row,
-  Row,
-  Row,
-];
 
 export interface TigrisEuphratesState {
   players: { [key in string]: PlayerState };
@@ -125,39 +72,6 @@ export interface TigrisEuphratesState {
   spaces: Spaces;
   kingdoms: Kingdom[];
   remainingMonuments: Monument[];
-}
-
-export function isSpaces(grid: readonly any[]): grid is Spaces {
-  if (grid.length !== ROW_SPACE_COUNT) return false;
-  for (let i = 0; i < grid.length; i++) {
-    for (let j = 0; j < grid[i].length; j++) {
-      if (grid[i].length !== COLUMN_SPACE_COUNT) return false;
-      if (!isSpace(grid[i][j])) return false;
-      //if ((grid[i][j] as Space).tile === undefined) return false;
-    }
-  }
-
-  return true;
-}
-
-export function isSpace(space: unknown): space is Space {
-  if (space === undefined) return false;
-  const hasTile = (space as Space).tile !== undefined;
-  return hasTile;
-}
-
-export function isSpaceCoord(coord: number[]): coord is SpaceCoord {
-  if (coord.length !== 2) return false;
-
-  return true;
-}
-
-export function isKingdom(kingdom: unknown): kingdom is Kingdom {
-  if (kingdom === undefined) return false;
-  const hasId = typeof (kingdom as Kingdom).id === "string";
-  const hasSpaces = isArray((kingdom as Kingdom).spaces);
-
-  return hasId && hasSpaces;
 }
 
 export function isLeader(leader: unknown): leader is Leader {

@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { Dynasty, Kingdom, Leader, Space, SpaceId } from "./types";
-import { getSpacesFromKingdom, makeNewKingdoms } from "./kingdom";
-import { initialGameState } from "./init";
-import { FARM, TEMPLE } from "./constants";
+import { Space, SpaceId } from "@teboard/space/types";
+import { getSpacesFromKingdom, makeNewKingdoms } from ".";
+import { initialGameState } from "@teboard/init";
+import { FARM } from "@teboard/constants";
+import { Kingdom } from "./types";
+import { Dynasty, Leader } from "@teboard/types";
 
 describe("getSpacesFromKingdom", () => {
   it("returns the correct spaces", () => {
