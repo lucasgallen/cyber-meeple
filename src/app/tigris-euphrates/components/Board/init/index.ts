@@ -39,6 +39,7 @@ export function initialPlayerState(
     leaders,
     points: { [FARM]: 0, [MARKET]: 0, [SETTLEMENT]: 0, [TEMPLE]: 0 },
     treasures: 0,
+    revolt: { attackValue: 0, wagedTiles: [], leaderCoord: [0, 0] },
   };
 }
 
@@ -80,6 +81,10 @@ export function initialGameState(playerCount: number): TigrisEuphratesState {
         "2": initialPlayerState(Dynasty.LION, []),
       },
       remainingMonuments: monuments,
+      revolt: {
+        attacker: "",
+        defender: "",
+      },
     };
 
   return {
@@ -93,6 +98,10 @@ export function initialGameState(playerCount: number): TigrisEuphratesState {
       "3": initialPlayerState(Dynasty.URN, []),
     },
     remainingMonuments: monuments,
+    revolt: {
+      attacker: "",
+      defender: "",
+    },
   };
 }
 

@@ -1,6 +1,6 @@
 import { FARM, MARKET, SETTLEMENT, TEMPLE } from "./constants";
 import { Kingdom } from "./kingdom/types";
-import { Spaces } from "./space/types";
+import { SpaceCoord, Spaces } from "./space/types";
 
 // Players: Urn, Archer, Lion, Bull
 export enum Dynasty {
@@ -58,6 +58,11 @@ export type PlayerState = {
   treasures: number;
   tiles: Tile[];
   leaders: Leader[];
+  revolt: {
+    wagedTiles: CivilizationTile[];
+    attackValue: number;
+    leaderCoord: SpaceCoord;
+  };
 };
 
 export type Leader = {
@@ -72,6 +77,10 @@ export interface TigrisEuphratesState {
   spaces: Spaces;
   kingdoms: Kingdom[];
   remainingMonuments: Monument[];
+  revolt: {
+    attacker: string;
+    defender: string;
+  };
 }
 
 export function isLeader(leader: unknown): leader is Leader {

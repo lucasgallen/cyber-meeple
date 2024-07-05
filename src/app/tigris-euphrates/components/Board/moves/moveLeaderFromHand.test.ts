@@ -50,7 +50,7 @@ describe("moveLeaderFromHand", () => {
     expect(setActivePlayers).toHaveBeenCalledOnce();
     expect(setActivePlayers).toBeCalledWith({
       currentPlayer: "AttackLeader",
-      value: { "0": "AttackLeader" },
+      next: { value: { "0": "DefendLeader" } },
     });
   });
 

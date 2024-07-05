@@ -378,6 +378,8 @@ function triggerAttackLeader(
 
   setActivePlayers({
     currentPlayer: "AttackLeader",
-    value: { [opposingPlayerId]: "AttackLeader" },
+    next: {
+      value: { [opposingPlayerId]: "DefendLeader" },
+    },
   });
 }

@@ -19,6 +19,7 @@ import {
 } from "./moves";
 import { SpaceCoord } from "./space/types";
 import { COLUMN_SPACE_COUNT, ROW_SPACE_COUNT } from "./space/constants";
+import { wageTempleTiles } from "./stages";
 
 // Player Victory points:
 //  - Red, Blue, Green, Black, Treasure (wild)
@@ -130,7 +131,36 @@ export const TigrisEuphrates: Game<TigrisEuphratesState> = {
       // - Move the losing leader off the board.
       // - Discard all temples from the sides of the board.
       AttackLeader: {
-        moves: {},
+        moves: {
+          WageTempleTiles: (
+            { G, ctx },
+            coordOfPlacedLeader: SpaceCoord,
+            numberOfTiles: number,
+          ) =>
+            wageTempleTiles({
+              G,
+              currentPlayer: ctx.currentPlayer,
+              coordOfPlacedLeader,
+              numberOfTiles,
+              isOpposing: false,
+            }),
+        },
+      },
+      DefendLeader: {
+        moves: {
+          WageTempleTiles: (
+            { G, ctx },
+            coordOfPlacedLeader: SpaceCoord,
+            numberOfTiles: number,
+          ) =>
+            wageTempleTiles({
+              G,
+              currentPlayer: ctx.currentPlayer,
+              coordOfPlacedLeader,
+              numberOfTiles,
+              isOpposing: true,
+            }),
+        },
       },
 
       // - If there are multiple colors for which both kingdoms have a leader, the active player chooses the order.
